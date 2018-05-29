@@ -14,30 +14,69 @@
 .model small
 .stack 2048
 
-dseg	segment para public 'data'
-		string	db	"Teste pr�tico de T.I",0
+DADOS	segment para public 'data'
+		
+   ;~~~~~~~~~~~~~~~~~Variáveis do Cursor~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+        string	db	"Teste prático de T.I",0
 		Car		db	32	; Guarda um caracter do Ecran 
 		Cor		db	7	; Guarda os atributos de cor do caracter
 		Car2		db	32	; Guarda um caracter do Ecran 
 		Cor2		db	7	; Guarda os atributos de cor do caracter
-		POSy		db	5	; a linha pode ir de [1 .. 25]
-		POSx		db	10	; POSx pode ir [1..80]	
+		POSy		db	8	; a linha pode ir de [1 .. 25]
+		POSx		db	30	; POSx pode ir [1..80]	
 		POSya		db	5	; Posição anterior de y
 		POSxa		db	10	; Posição anterior de x
+    ;~~~~~~~~~~~~~~~~~Variáveis do Cursor~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   
 
+    ;~~~~~~~~~~~~~~~~~Variáveis do Tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+       
         ultimo_num_aleat dw 0
-
-	str_num db 5 dup(?),'$'
-	
-        linha		db	0	; Define o n�mero da linha que est� a ser desenhada
+    	str_num db 5 dup(?),'$'
+	    linha		db	0	; Define o n�mero da linha que est� a ser desenhada
         nlinhas		db	0
-	cor3		db 	0
-	car3		db	' '	
+	    corTab		db 	0
+        carTab		db	' '	
 
-dseg	ends
+   ;~~~~~~~~~~~~~~~~~Variáveis do Tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
-cseg	segment para public 'code'
-assume		cs:cseg, ds:dseg
+
+    ;~~~~~~~~~~~~~~~~~~Informações sobre o tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~
+       
+        tamX db 9 ; Largura do tabuleiro
+        tamY db 6 ; Altura do tabuleiro
+        iniX dw 60 ; Primeiro ponto do tabuleiro em X
+        iniY db 8 ; Primeiro ponto do tabuleiro em Y
+    
+    ;~~~~~~~~~~~~~~~~~~Informações sobre o tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ;~~~~~~~~~~~~~~~~~~~~~~~~Variáveis dos Menus~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+           
+	 Menu		db "       _______ _______ __   __ _______ ___     _______ _______ _______  ",10,13
+				db "      |       |       |  | |  |  _    |   |   |   _   |       |       | ",10,13
+				db "      |_     _|   _   |  |_|  | |_|   |   |   |  |_|  |  _____|_     _| ",10,13
+  				db "        |   | |  | |  |       |       |   |   |       | |_____  |   |   ",10,13 
+  				db "        |   | |  |_|  |_     _|  _   ||   |___|       |_____  | |   |   ",10,13
+  				db "        |   | |       | |   | | |_|   |       |   _   |_____| | |   |   ",10,13
+  				db "        |___| |_______| |___| |_______|_______|__| |__|_______| |___|   ",10,13
+                db "                                                                        ",10,13
+				db "              1 - Jogar                                                 ",10,13
+				db "              2 - Ver Pontuacoes                                        ",10,13
+				db "              3 - Configuracao da Grelha                                ",10,13
+				db "              4 - Sair                                                  ",10,13
+				db "                                                                        ",10,13
+				db "        Input: ",10, 13,10, 13,10, 13,10, 13
+				db  '$'
+	
+  
+
+
+
+
+DADOS	ends
+
+CODIGO	segment para public 'code'
+assume		cs:CODIGO, ds:DADOS
 
 
 
@@ -83,26 +122,96 @@ SAI_TECLA:	RET
 LE_TECLA	endp
 ;########################################################################
 
+
+
+;~~~~~~~~~~~~~~~~~~~~~~~ Inicio do programa ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Main  proc
+
+        mov		AX, DADOS
+		mov		DS,AX
+
+
+CICLOMENU:
+	
+		goto_xy 0,0
+		
+        ; ~~~~~~~~~~~~~~~Limpar o ecra~~~~~~~~~~~
+		MOV		AX,0B800H
+		MOV		ES,AX
+		
+        call APAGA_ECRAN
+	
+    	;~~~~~~~~~~Imprimir no ecra o Menu~~~~~~~
+		
+		lea     dx, Menu 
+		mov     ah, 09h
+		int     21h
+		
+        call LE_TECLA
+		
+        			
+			CMP AL, 49	  ; jogar - carregar o labirinto
+			
+
+			;call TRATA_HORAS_JOGO
+            
+            call APAGA_ECRAN
+			jmp Jogar
+			
+			
+			
+		;SUBMENU: ; sub menu do desenho
+		
+			;CICLOd:
+		
+			;goto_xy 4,0
+						; funcao apagar ecran
+			;MOV		AX,0B800H
+			;MOV		ES,AX
+			;call APAGA_ECRAN
+			; fim apaga ecran
+			
+			;lea     dx, SubMenu2
+			;mov     ah, 09h
+			;int     21h
+			;call LE_TECLA
+				;D1:			
+					;CMP 	AL, '1'	  ; jogar - definer labirinto como defalt
+					;JNE		D2
+					;CALL	defineDefault
+					;jmp		CICLO
+				;FORAd: 
+					;CMP AL, 27 ; TECLA ESCAPE so sub menu do desenho
+					;JE CICLOMENU;
+					
+			;jmp CICLOd
+		FORA: 
+			CMP AL, 27 ; TECLA ESCAPE
+			JE fim;
+		
+	JMP CICLOMENU
+
+jogar:
+
         ;#cenas#####
         mov	cx,10		; Faz o ciclo 10 vezes
 		;#cenas#####
-        
-        mov		ax, dseg
-		mov		ds,ax
+     
+      
+    
 		mov		ax,0B800h
 		mov		es,ax
 	
 		goto_xy		POSx,POSy	; Vai para nova possição
 		mov 		ah, 08h	; Guarda o Caracter que est� na posição do Cursor
-		mov		bh,0		; numero da p�gina
+		mov		bh,0		; numero da página
 		int		10h			
 		mov		Car, al	; Guarda o Caracter que está na posição do Cursor
-		mov		Cor, ah	; Guarda a cor que est� na posição do Cursor	
+		mov		Cor, ah	; Guarda a cor que está na posição do Cursor	
 		
 		inc		POSx
 		goto_xy		POSx,POSy	; Vai para nova possição2
-		mov 		ah, 08h		; Guarda o Caracter que est� na posi��o do Cursor
+		mov 		ah, 08h		; Guarda o Caracter que está na posição do Cursor
 		mov		bh,0		; numero da página
 		int		10h			
 		mov		Car2, al	; Guarda o Caracter que está na posição do Cursor
@@ -132,7 +241,7 @@ ciclo2:		mov	al, 160
 
 		mov	cx, 9		; São 9 colunas 
 ciclo1:  	
-		mov 	dh,	car3	; vai imprimir o caracter "SpCE"
+		mov 	dh,	carTab	; vai imprimir o caracter "SpCE"
 		mov	es:[bx],dh	;
 
 
@@ -143,13 +252,13 @@ novacor:
 		cmp	al, 0		; Se o fundo de ecran é preto
 		je	novacor		; vai buscar outra cor 
 
-		mov 	dh,	   car3	; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
+		mov 	dh,	   carTab	; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
 		mov	es:[bx],   dh		
 		mov	es:[bx+1], al	; Coloca as caracter�sticas de cor da posi��o atual 
 		inc	bx		
 		inc	bx		; pr�xima posi��o e ecran dois bytes � frente 
 
-		mov 	dh,	   car3	; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
+		mov 	dh,	   carTab	; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
 		mov	es:[bx],   dh
 		mov	es:[bx+1], al
 		inc	bx
@@ -167,7 +276,7 @@ novacor:
 
 
 
-CICLO:		goto_xy	POSxa,POSya	; Vai para a posi��o anterior do cursor
+CICLO_CURSOR:		goto_xy	POSxa,POSya	; Vai para a posição anterior do cursor
 		mov		ah, 02h
 		mov		dl, Car	; Repoe Caracter guardado 
 		int		21H	
@@ -199,7 +308,8 @@ CICLO:		goto_xy	POSxa,POSya	; Vai para a posi��o anterior do cursor
 		goto_xy		77,0		; Mostra o caractr que estava na posi��o do AVATAR
 		mov		ah, 02h		; IMPRIME caracter da posição no canto
 		mov		dl, Cor	
-		int		21H			
+		int		21H		
+        	
 		
 		goto_xy		78,0		; Mostra o caractr2 que estava na posi��o do AVATAR
 		mov		ah, 02h		; IMPRIME caracter2 da posição no canto
@@ -210,6 +320,7 @@ CICLO:		goto_xy	POSxa,POSya	; Vai para a posi��o anterior do cursor
         
 	
 		goto_xy		POSx,POSy	; Vai para posição do cursor
+
 IMPRIME:	mov		ah, 02h
 		mov		dl, '('	; Coloca AVATAR1
 		int		21H
@@ -228,22 +339,27 @@ IMPRIME:	mov		ah, 02h
 		mov		al, POSy	; Guarda a posição do cursor
 		mov 		POSya, al
 		
-LER_SETA:	call 		LE_TECLA
+LER_SETA:	
+
+        call 		LE_TECLA
 		cmp		ah, 1
 		je		ESTEND
-		CMP 		AL, 27	; ESCAPE
+		CMP 		AL, 27	;  27=> ESC ascii
 		JE		FIM
 		jmp		LER_SETA
 		
-ESTEND:		cmp 		al,48h
+ESTEND:		
+        cmp 		al,48h
 		jne		BAIXO
-		dec		POSy		;cima
-		jmp		CICLO
 
-BAIXO:		cmp		al,50h
+		dec		POSy		;cima
+		jmp		CICLO_CURSOR
+
+BAIXO:		
+        cmp		al,50h
 		jne		ESQUERDA
 		inc 		POSy		;Baixo
-		jmp		CICLO
+		jmp		CICLO_CURSOR
 
 ESQUERDA:
 		cmp		al,4Bh
@@ -251,7 +367,7 @@ ESQUERDA:
 		dec		POSx		;Esquerda
 		dec		POSx		;Esquerda
 
-		jmp		CICLO
+		jmp		CICLO_CURSOR
 
 DIREITA:
 		cmp		al,4Dh
@@ -259,7 +375,11 @@ DIREITA:
 		inc		POSx		;Direita
 		inc		POSx		;Direita
 		
-		jmp		CICLO
+		jmp		CICLO_CURSOR
+
+ESPACO:
+
+        cmp al,71
 
 fim:	
 		mov		ah,4CH
@@ -406,7 +526,7 @@ naoajusta:
 	ret
 delay endp
 
-Cseg	ends
+CODIGO	ends
 end	Main
 
 

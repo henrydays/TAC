@@ -20,7 +20,7 @@ dseg	segment para public 'data'
 		Cor		db	7	; Guarda os atributos de cor do caracter
 		Car2		db	32	; Guarda um caracter do Ecran 
 		Cor2		db	7	; Guarda os atributos de cor do caracter
-		POSy		db	5	; a linha pode ir de [1 .. 25]
+		POSy		db	15	; a linha pode ir de [1 .. 25]
 		POSx		db	10	; POSx pode ir [1..80]	
 		POSya		db	5	; Posição anterior de y
 		POSxa		db	10	; Posição anterior de x
