@@ -141,22 +141,27 @@ CICLOMENU:
 		
         call APAGA_ECRAN
 	
+
     	;~~~~~~~~~~Imprimir no ecra o Menu~~~~~~~
 		
 		lea     dx, Menu 
-		mov     ah, 09h
-		int     21h
-		
-        call LE_TECLA
-		
-        			
-			CMP AL, 49	  ; jogar - carregar o labirinto
+		mov  ah, 07h    ; Espera para que o utilizador insira um caracter
+        int  21h
+        cmp  al, '1'    ; Se inserir o numero 1
+        call APAGA_ECRAN
+    
+		A:			
+			CMP AL, '1'	  ; jogar - carregar o labirinto
+			JE B
+		B:
+			;call TRATA_HORAS_JOGO
+			jmp Jogar
+			
 			
 
 			;call TRATA_HORAS_JOGO
             
-            call APAGA_ECRAN
-			jmp Jogar
+        
 			
 			
 			
