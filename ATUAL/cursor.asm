@@ -3,7 +3,7 @@
 ;   
 ;	ANO LECTIVO 2017/2018
 ;--------------------------------------------------------------
-; Demostração da navegação do Ecran com um avatar
+; Demostraï¿½ï¿½o da navegaï¿½ï¿½o do Ecran com um avatar
 ;
 ;		arrow keys to move 
 ;		press ESC to exit
@@ -15,26 +15,25 @@
 .stack 2048
 
 dseg	segment para public 'data'
-		string	db	"Teste prático de T.I",0
+		string	db	"Teste prï¿½tico de T.I",0
 		Car		db	32	; Guarda um caracter do Ecran 
 		Cor		db	7	; Guarda os atributos de cor do caracter
 		Car2		db	32	; Guarda um caracter do Ecran 
 		Cor2		db	7	; Guarda os atributos de cor do caracter
 		POSy		db	5	; a linha pode ir de [1 .. 25]
 		POSx		db	10	; POSx pode ir [1..80]	
-		POSya		db	5	; Posição anterior de y
-		POSxa		db	10	; Posição anterior de x
+		POSya		db	5	; PosiÃ§Ã£o anterior de y
+		POSxa		db	10	; PosiÃ§Ã£o anterior de x
 dseg	ends
 
 cseg	segment para public 'code'
 assume		cs:cseg, ds:dseg
 
 
-
 ;########################################################################
 goto_xy	macro		POSx,POSy
 		mov		ah,02h
-		mov		bh,0		; numero da página
+		mov		bh,0		; numero da pï¿½gina
 		mov		dl,POSx
 		mov		dh,POSy
 		int		10h
@@ -79,24 +78,24 @@ Main  proc
 		mov		ax,0B800h
 		mov		es,ax
 	
-		goto_xy		POSx,POSy	; Vai para nova possição
-		mov 		ah, 08h	; Guarda o Caracter que está na posição do Cursor
-		mov		bh,0		; numero da página
+		goto_xy		POSx,POSy	; Vai para nova possiï¿½ï¿½o
+		mov 		ah, 08h	; Guarda o Caracter que estï¿½ na posiï¿½ï¿½o do Cursor
+		mov		bh,0		; numero da pï¿½gina
 		int		10h			
-		mov		Car, al	; Guarda o Caracter que está na posição do Cursor
-		mov		Cor, ah	; Guarda a cor que está na posição do Cursor	
+		mov		Car, al	; Guarda o Caracter que estÃ¡ na posiÃ§Ã£oo do Cursor
+		mov		Cor, ah	; Guarda a cor que estï¿½ na posiï¿½ï¿½o do Cursor	
 		
 		inc		POSx
-		goto_xy		POSx,POSy	; Vai para nova possição2
-		mov 		ah, 08h		; Guarda o Caracter que está na posição do Cursor
-		mov		bh,0		; numero da página
+		goto_xy		POSx,POSy	; Vai para nova possiï¿½ï¿½o2
+		mov 		ah, 08h		; Guarda o Caracter que estï¿½ na posiï¿½ï¿½o do Cursor
+		mov		bh,0		; numero da pï¿½gina
 		int		10h			
-		mov		Car2, al	; Guarda o Caracter que está na posição do Cursor
-		mov		Cor2, ah	; Guarda a cor que está na posição do Cursor	
+		mov		Car2, al	; Guarda o Caracter que estï¿½ na posiï¿½ï¿½o do Cursor
+		mov		Cor2, ah	; Guarda a cor que estï¿½ na posiï¿½ï¿½o do Cursor	
 		dec		POSx
 	
 
-CICLO:		goto_xy	POSxa,POSya	; Vai para a posição anterior do cursor
+CICLO:		goto_xy	POSxa,POSya	; Vai para a posiï¿½ï¿½o anterior do cursor
 		mov		ah, 02h
 		mov		dl, Car	; Repoe Caracter guardado 
 		int		21H	
@@ -108,51 +107,51 @@ CICLO:		goto_xy	POSxa,POSya	; Vai para a posição anterior do cursor
 		int		21H	
 		dec 		POSxa
 		
-		goto_xy	POSx,POSy	; Vai para nova possição
+		goto_xy	POSx,POSy	; Vai para nova possiï¿½ï¿½o
 		mov 		ah, 08h
-		mov		bh,0		; numero da página
+		mov		bh,0		; numero da pï¿½gina
 		int		10h		
-		mov		Car, al	; Guarda o Caracter que está na posição do Cursor
-		mov		Cor, ah	; Guarda a cor que está na posição do Cursor
+		mov		Car, al	; Guarda o Caracter que estï¿½ na posiï¿½ï¿½o do Cursor
+		mov		Cor, ah	; Guarda a cor que estï¿½ na posiï¿½ï¿½o do Cursor
 		
 		inc		POSx
-		goto_xy		POSx,POSy	; Vai para nova possição
+		goto_xy		POSx,POSy	; Vai para nova possiï¿½ï¿½o
 		mov 		ah, 08h
-		mov		bh,0		; numero da página
+		mov		bh,0		; numero da pï¿½gina
 		int		10h		
-		mov		Car2, al	; Guarda o Caracter2 que está na posição do Cursor2
-		mov		Cor2, ah	; Guarda a cor que está na posição do Cursor2
+		mov		Car2, al	; Guarda o Caracter2 que estï¿½ na posiï¿½ï¿½o do Cursor2
+		mov		Cor2, ah	; Guarda a cor que estï¿½ na posiï¿½ï¿½o do Cursor2
 		dec		POSx
 		
 		
-		goto_xy		77,0		; Mostra o caractr que estava na posição do AVATAR
-		mov		ah, 02h		; IMPRIME caracter da posição no canto
+		goto_xy		77,0		; Mostra o caractr que estava na posiï¿½ï¿½o do AVATAR
+		mov		ah, 02h		; IMPRIME caracter da posiï¿½ï¿½o no canto
 		mov		dl, Car	
 		int		21H			
 		
-		goto_xy		78,0		; Mostra o caractr2 que estava na posição do AVATAR
-		mov		ah, 02h		; IMPRIME caracter2 da posição no canto
+		goto_xy		78,0		; Mostra o caractr2 que estava na posiï¿½ï¿½o do AVATAR
+		mov		ah, 02h		; IMPRIME caracter2 da posiï¿½ï¿½o no canto
 		mov		dl, Car2	
 		int		21H			
 		
 	
-		goto_xy		POSx,POSy	; Vai para posição do cursor
+		goto_xy		POSx,POSy	; Vai para posiï¿½ï¿½o do cursor
 IMPRIME:	mov		ah, 02h
-		mov		dl, '('	; Coloca AVATAR1
+		mov		dl, '-'	; Coloca AVATAR1
 		int		21H
 		
 		inc		POSx
 		goto_xy		POSx,POSy		
 		mov		ah, 02h
-		mov		dl, ')'	; Coloca AVATAR2
+		mov		dl, '-'	; Coloca AVATAR2
 		int		21H	
 		dec		POSx
 		
-		goto_xy		POSx,POSy	; Vai para posição do cursor
+		goto_xy		POSx,POSy	; Vai para posiï¿½ï¿½o do cursor
 		
-		mov		al, POSx	; Guarda a posição do cursor
+		mov		al, POSx	; Guarda a posiï¿½ï¿½o do cursor
 		mov		POSxa, al
-		mov		al, POSy	; Guarda a posição do cursor
+		mov		al, POSy	; Guarda a posiï¿½ï¿½o do cursor
 		mov 		POSya, al
 		
 LER_SETA:	call 		LE_TECLA

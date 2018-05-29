@@ -203,7 +203,7 @@ dseg   	segment para public 'data'
 
     ; 				Ficheiros Labirinto
     Erro_Campo		db		'Campo com formato incorrecto$'
-    game_screen     db      'ecra.TXT$',0
+    game_screen     db      'ecra.TXT',0
     HandleFile      dw      0
     POStrY			db		3	; a linha pode ir de [1 .. 25]
 	POStrX			db		17	; POStrX pode ir [1..80]	
@@ -213,13 +213,13 @@ dseg   	segment para public 'data'
 	ASK_STR			db 		'Insira o seu nome: $',0
 
     ; 				Ficheiros Top10
-    Fich         	db      'TOP10.txt$',0
+    Fich         	db      'TOP10.txt',0
 
     ; 				Ficheiros Configs
     mazegen         db      'mazegen.TXT',0
-    selectedMaze	db 		'maze1.TXT$',0
-    defaultMaze     db      'maze1.TXT$',0
-    savedMaze 	    db 		'maze2.TXT$',0
+    selectedMaze	db 		'maze1.TXT',0
+    defaultMaze     db      'maze1.TXT',0
+    savedMaze 	    db 		'maze2.TXT',0
 
     ;				MOSTRAR PARA VOLTAR AO MENU
     Volta_Menu		db 		'Para voltar ao menu Prima "5" $',0

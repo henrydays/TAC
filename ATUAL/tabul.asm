@@ -3,9 +3,9 @@
 ;   
 ;	ANO LECTIVO 2017/2018
 ;--------------------------------------------------------------
-; Demonstração duma forma possível de desenhar o tabuleiro do jogo 
+; Demonstraï¿½ï¿½o duma forma possï¿½vel de desenhar o tabuleiro do jogo 
 ;
-; Inclui uma rotina de geração de números aleatórios 	
+; Inclui uma rotina de geraï¿½ï¿½o de nï¿½meros aleatï¿½rios 	
 ;	
 ;
 ;--------------------------------------------------------------
@@ -20,7 +20,7 @@ DADOS	SEGMENT PARA 'DATA'
 
 	str_num db 5 dup(?),'$'
 	
-        linha		db	0	; Define o número da linha que está a ser desenhada
+        linha		db	0	; Define o nï¿½mero da linha que estï¿½ a ser desenhada
         nlinhas		db	0
 	cor		db 	0
 	car		db	' '	
@@ -37,45 +37,45 @@ PRINC PROC
 	mov	cx,10		; Faz o ciclo 10 vezes
 ciclo4:
 		call	CalcAleat
-		pop	ax 		; vai buscar 'a pilha o número aleatório
+		pop	ax 		; vai buscar 'a pilha o nï¿½mero aleatï¿½rio
 
 		mov	dl,cl	
 		mov	dh,70
-		push	dx		; Passagem de parâmetros a impnum (posição do ecran)
-		push	ax		; Passagem de parâmetros a impnum (número a imprimir)
-		call	impnum		; imprime 10 aleatórios na parte direita do ecran
-		loop	ciclo4		; Ciclo de impressão dos números aleatórios
+		push	dx		; Passagem de parï¿½metros a impnum (posiï¿½ï¿½o do ecran)
+		push	ax		; Passagem de parï¿½metros a impnum (nï¿½mero a imprimir)
+		call	impnum		; imprime 10 aleatï¿½rios na parte direita do ecran
+		loop	ciclo4		; Ciclo de impressï¿½o dos nï¿½meros aleatï¿½rios
 		
-		mov   	ax, 0b800h	; Segmento de memória de vídeo onde vai ser desenhado o tabuleiro
+		mov   	ax, 0b800h	; Segmento de memï¿½ria de vï¿½deo onde vai ser desenhado o tabuleiro
 		mov   	es, ax	
-		mov	linha, 	8	; O Tabuleiro vai começar a ser desenhado na linha 8 
+		mov	linha, 	8	; O Tabuleiro vai comeï¿½ar a ser desenhado na linha 8 
 		mov	nlinhas, 6	; O Tabuleiro vai ter 6 linhas
 		
 ciclo2:		mov	al, 160		
 		mov	ah, linha
 		mul	ah
 		add	ax, 60
-		mov 	bx, ax		; Determina Endereço onde começa a "linha". bx = 160*linha + 60
+		mov 	bx, ax		; Determina Endereï¿½o onde comeï¿½a a "linha". bx = 160*linha + 60
 
-		mov	cx, 9		; São 9 colunas 
+		mov	cx, 9		; Sï¿½o 9 colunas 
 ciclo:  	
-		mov 	dh,	car	; vai imprimir o caracter "SAPCE"
+		mov 	dh,	car	; vai imprimir o caracter "SpCE"
 		mov	es:[bx],dh	;
 	
 novacor:	
-		call	CalcAleat	; Calcula próximo aleatório que é colocado na pinha 
-		pop	ax ; 		; Vai buscar 'a pilha o número aleatório
-		and 	al,01110000b	; posição do ecran com cor de fundo aleatório e caracter a preto
-		cmp	al, 0		; Se o fundo de ecran é preto
+		call	CalcAleat	; Calcula prï¿½ximo aleatï¿½rio que ï¿½ colocado na pinha 
+		pop	ax ; 		; Vai buscar 'a pilha o nï¿½mero aleatï¿½rio
+		and 	al,01110000b	; posiï¿½ï¿½o do ecran com cor de fundo aleatï¿½rio e caracter a preto
+		cmp	al, 0		; Se o fundo de ecran ï¿½ preto
 		je	novacor		; vai buscar outra cor 
 
-		mov 	dh,	   car	; Repete mais uma vez porque cada peça do tabuleiro ocupa dois carecteres de ecran
+		mov 	dh,	   car	; Repete mais uma vez porque cada peï¿½a do tabuleiro ocupa dois carecteres de ecran
 		mov	es:[bx],   dh		
-		mov	es:[bx+1], al	; Coloca as características de cor da posição atual 
+		mov	es:[bx+1], al	; Coloca as caracterï¿½sticas de cor da posiï¿½ï¿½o atual 
 		inc	bx		
-		inc	bx		; próxima posição e ecran dois bytes à frente 
+		inc	bx		; prÃ³xima posiÃ§Ã£o e ecran dois bytes Ã  frente 
 
-		mov 	dh,	   car	; Repete mais uma vez porque cada peça do tabuleiro ocupa dois carecteres de ecran
+		mov 	dh,	   car	; Repete mais uma vez porque cada peÃ§aa do tabuleiro ocupa dois carecteres de ecran
 		mov	es:[bx],   dh
 		mov	es:[bx+1], al
 		inc	bx
@@ -83,13 +83,13 @@ novacor:
 		
 		mov	di,1 ;delay de 1 centesimo de segundo
 		call	delay
-		loop	ciclo		; continua até fazer as 9 colunas que correspondem a uma liha completa
+		loop	ciclo		; continua atï¿½ fazer as 9 colunas que correspondem a uma liha completa
 		
-		inc	linha		; Vai desenhar a próxima linha
+		inc	linha		; Vai desenhar a prï¿½xima linha
 		dec	nlinhas		; contador de linhas
 		mov	al, nlinhas
-		cmp	al, 0		; verifica se já desenhou todas as linhas 
-		jne	ciclo2		; se ainda há linhas a desenhar continua 
+		cmp	al, 0		; verifica se jï¿½ desenhou todas as linhas 
+		jne	ciclo2		; se ainda hï¿½ linhas a desenhar continua 
 FIM:
 	MOV	AH,4Ch
 	INT	21h
@@ -99,7 +99,7 @@ PRINC ENDP
 ;CalcAleat - calcula um numero aleatorio de 16 bits
 ;Parametros passados pela pilha
 ;entrada:
-;não tem parametros de entrada
+;nï¿½o tem parametros de entrada
 ;saida:
 ;param1 - 16 bits - numero aleatorio calculado
 ;notas adicionais:
@@ -119,7 +119,7 @@ CalcAleat proc near
 	mov	ah,00h
 	int	1ah
 
-	add	dx,ultimo_num_aleat	; vai buscar o aleatório anterior
+	add	dx,ultimo_num_aleat	; vai buscar o aleatï¿½rio anterior
 	add	cx,dx	
 	mov	ax,65521
 	push	dx
@@ -129,9 +129,9 @@ CalcAleat proc near
 	add	dx,32749
 	add	dx,ax
 
-	mov	ultimo_num_aleat,dx	; guarda o novo numero aleatório  
+	mov	ultimo_num_aleat,dx	; guarda o novo numero aleatï¿½rio  
 
-	mov	[BP+4],dx		; o aleatório é passado por pilha
+	mov	[BP+4],dx		; o aleatï¿½rio ï¿½ passado por pilha
 
 	pop	dx
 	pop	cx
@@ -148,7 +148,7 @@ CalcAleat endp
 ;param2 -  8 bits - posicao y
 ;param3 - 16 bits - numero a imprimir
 ;saida:
-;não tem parametros de saída
+;nï¿½o tem parametros de saï¿½da
 ;notas adicionais:
 ; deve estar definida uma variavel => str_num db 5 dup(?),'$'
 ; assume-se que DS esta a apontar para o segmento onde esta armazenada str_num
@@ -195,7 +195,7 @@ impnum endp
 
 
 
-;recebe em di o número de milisegundos a esperar
+;recebe em di o nï¿½mero de milisegundos a esperar
 delay proc
 	pushf
 	push	ax
