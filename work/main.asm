@@ -141,18 +141,51 @@ CICLOMENU:
 		
         call APAGA_ECRAN
 	
-
+    
     	;~~~~~~~~~~Imprimir no ecra o Menu~~~~~~~
 		
 		lea     dx, Menu 
-		mov  ah, 07h    ; Espera para que o utilizador insira um caracter
-        int  21h
-        cmp  al, '1'    ; Se inserir o numero 1
-        jmp Jogar
-			
-	
-
+		mov     ah, 09h
+		int     21h
 		
+        call LE_TECLA
+		
+        			
+			CMP AL, 49	  ; jogar - carregar o labirinto
+			
+
+			;call TRATA_HORAS_JOGO
+            
+            call APAGA_ECRAN
+			jmp Jogar
+			
+			
+			
+		;SUBMENU: ; sub menu do desenho
+		
+			;CICLOd:
+		
+			;goto_xy 4,0
+						; funcao apagar ecran
+			;MOV		AX,0B800H
+			;MOV		ES,AX
+			;call APAGA_ECRAN
+			; fim apaga ecran
+			
+			;lea     dx, SubMenu2
+			;mov     ah, 09h
+			;int     21h
+			;call LE_TECLA
+				;D1:			
+					;CMP 	AL, '1'	  ; jogar - definer labirinto como defalt
+					;JNE		D2
+					;CALL	defineDefault
+					;jmp		CICLO
+				;FORAd: 
+					;CMP AL, 27 ; TECLA ESCAPE so sub menu do desenho
+					;JE CICLOMENU;
+					
+			;jmp CICLOd
 		FORA: 
 			CMP AL, 27 ; TECLA ESCAPE
 			JE fim;
@@ -166,7 +199,7 @@ jogar:
 		;#cenas#####
      
       
-    	call APAGA_ECRAN	
+    
 		mov		ax,0B800h
 		mov		es,ax
 	
