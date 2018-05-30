@@ -4,8 +4,8 @@
  
 DADOS   SEGMENT PARA 'DATA'
     ; --- DADOS PRINCIPAIS ---
-		POSx_in db 4 ;posicao X dentro do tabul
-		POSy_in db 3 ;posicao Y dentro do tabul
+		POSx_in db 6 ;posicao X dentro do tabul
+		POSy_in db 4 ;posicao Y dentro do tabul
 		vetor db 108 dup(0) 
 		flag_esq_dir db 0 ; se tiver pe�as iguais a esq ou dir = 1
 		flag_cim_baix db 0 ;se tiver pe�as iguais cima ou baixo = 1
@@ -42,28 +42,20 @@ DADOS   SEGMENT PARA 'DATA'
     ; --- !VARIAVEIS DO CURSOR ---
 		
 	; --- VARIAVEIS DE MSG DO MENU ---	
-	Menu        db      10, 13, 10, 13, "-------------------------------",10,13
-				db " _______ _______ __   __ _______ ___     _______ _______ _______  ",10,13
-				db "|       |       |  | |  |  _    |   |   |   _   |       |       |",10,13
-				db "|_     _|   _   |  |_|  | |_|   |   |   |  |_|  |  _____|_     _|",10,13
-  				db "  |   | |  | |  |       |       |   |   |       | |_____  |   |  ",10,13 
-  				db "  |   | |  |_|  |_     _|  _   ||   |___|       |_____  | |   |  ",10,13
-  				db "  |   | |       | |   | | |_|   |       |   _   |_____| | |   |  ",10,13
-  				db "  |___| |_______| |___| |_______|_______|__| |__|_______| |___|  ",10,13
-
-				db      "1 - Jogar",10,13
-				db      "2 - Ver Pontuacoes",10,13
-				db      "3 - Configuracao da Grelha",10,13
-				db      "4 - Sair",10,13
-				db      10, 13, 10, 13, "-----------------------",10,13
+	Menu    db      10, 13, 10, 13, "-------------------------------",0Dh,0Ah,0Dh,0Ah,09h
+				db      "1 - Jogar",0Dh,0Ah,09h 
+				db      "2 - Ver Pontuacoes",0Dh,0Ah,09h     
+				db      "3 - Configuracao da Grelha",0Dh,0Ah,09h
+				db      "4 - Sair",0Dh,0Ah,09h
+				db      10, 13, 10, 13, "-----------------------",0Dh,0Ah,0Dh,0Ah,09h
 				db      "Digite um numero: ",10, 13,10, 13,10, 13,10, 13
 				db      '$'
 				
 				
-	SubMenu2    db      10, 13, 10, 13, "-------------------------------",10,13
-				db      "1 - Geracao de Grelha de Forma Aleatoria",10,13
+	SubMenu2    db      10, 13, 10, 13, "-------------------------------",0Dh,0Ah,0Dh,0Ah,09h
+				db      "1 - Geracao de Grelha de Forma Aleatoria",0Dh,0Ah,09h 
 				db      "2 - Carregar Grelha",0Dh,0Ah,09h     
-				db      10, 13, 10, 13, "-----------------------",10,13
+				db      10, 13, 10, 13, "-----------------------",0Dh,0Ah,0Dh,0Ah,09h
 				db      "Digite um numero: ",10, 13,10, 13,10, 13,10, 13			
   	; --- !VARIAVEIS DE MSG DO MENU ---	
 
@@ -77,7 +69,7 @@ DADOS   SEGMENT PARA 'DATA'
 	;------TRATA_HORAS_JOGO E DATA_JOGO ---
 	STR12	 		DB 		"            "	; String para 12 digitos
 	contaSeg 		dw 		0				;contador que regista a varia��o dos segundos/tempo
-	Segundos		dw		?		    	; Vai guardar os segundos actuais
+	Segundos		dw		?			; Vai guardar os segundos actuais
 	Old_seg			dw		0				; Guarda os �ltimos segundos que foram lidos
 	;------TRATA_HORAS_JOGO E DATA_JOGO ---
 	
@@ -154,7 +146,6 @@ CODIGO  SEGMENT PARA 'CODE'
         cmp ax,si
         jnb naoajusta
         add ax,6000 ; 60 segundos
-   
     naoajusta:
         sub ax,si
         cmp ax,di
@@ -340,9 +331,9 @@ ImprimeVetor proc
 		je br
 				
 		mov cl, vetor[si]
-        mov dh, carESP   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
+        mov dh, carESP   ; Repete mais uma vez porque cada peça do tabuleiro ocupa dois carecteres de ecran
         mov es:[bx],   dh      
-        mov es:[bx+1], cl   ; Coloca as caracter�sticas de cor da posi��o atual
+        mov es:[bx+1], cl   ; Coloca as caracteresticas de cor da posição atual
         inc bx     
         inc bx 
 		
@@ -511,7 +502,7 @@ novacor:
 ; ---- !TABULEIRO ---
 
 ; ---- CURSOR ---
-    goto_xy     iniY,POSy   ; Vai para nova possio
+    goto_xy     iniY,POSy   ; Vai para nova possi��o
     mov     ah, 08h ; Guarda o Caracter que est� na posi��o do Cursor
     mov     bh,0        ; numero da p�gina
     int     10h        
@@ -557,12 +548,12 @@ CICLO_CURSOR:       goto_xy POSxa,POSya ; Vai para a posi��o anterior do cur
         int     21H
         dec         POSxa
        
-        goto_xy POSx,POSy   ; Vai para nova possi��o
+        goto_xy POSx,POSy   ; Vai para nova possição
         mov         ah, 08h
-        mov     bh,0        ; numero da p�gina
+        mov     bh,0        ; numero da página
         int     10h    
-        mov     Car, al ; Guarda o Caracter que est� na posi��o do Cursor
-        ;mov     Cor, ah ; Guarda a cor que est� na posi��o do Cursor
+        mov     Car, al ; Guarda o Caracter que está na posição do Cursor
+        ;mov     Cor, ah ; Guarda a cor que está na posição do Cursor
 		;--- Retifica cor de fundo
 		mov cl, 4 ; PARA FAZER O ROR TEM DE SR COM CL
 		ror ah, cl
@@ -615,8 +606,9 @@ CICLO_CURSOR:       goto_xy POSxa,POSya ; Vai para a posi��o anterior do cur
        
    
         goto_xy     POSx,POSy   ;Vai para posi��o do cursor
-IMPRIME:    mov     ah, 02h
-        mov     dl, 178 ;Coloca AVATAR1  Gon�alo Muda para 176, 177, 178 e v� qual fica melhor
+IMPRIME:   
+ mov     ah, 02h
+        mov     dl, 176 ;Coloca AVATAR1  Gon�alo Muda para 176, 177, 178 e v� qual fica melhor
         int     21H
        
         inc     POSx
@@ -666,7 +658,7 @@ LER_SETA:
 		call        LE_TECLA
         cmp     ah, 1
         je      ESTEND
-        CMP         AL, 27  ; 27= ESC em ascii
+        CMP         AL, 27  ; ESCAPE
         JE      FIM
         jmp     LER_SETA
        
@@ -805,7 +797,6 @@ ESPACO:
 			; mov es:[si+1], al   ; Coloca a cor na posi��o frente
 						
 	explosao_esq:
-		
 		cmp POSx_in, 0
 		je explosao_baixo	
 		cmp dl, vetor[bx-2]
