@@ -1,4 +1,4 @@
-.8086
+ .8086
 .MODEL SMALL
 .STACK 2048
  
@@ -221,6 +221,13 @@ ENDM
     SAI_TECLA:  RET
     LE_TECLA    endp
 ; ---- !PROCEDIMENTOS/ROTINAS CURSOR ---
+   
+
+
+
+
+
+
    
    
 ;########################################################################
