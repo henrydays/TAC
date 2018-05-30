@@ -16,6 +16,30 @@
 
 DADOS	segment para public 'data'
 		
+    ;~~~~~~~~~~~~~~~~~ Dados do vetor do tabuleiro ~~~~~~~~~~~~~~~~~~~~~~
+		
+        POSx_in db 6 ;posicao X dentro do tabul
+		POSy_in db 4 ;posicao Y dentro do tabul
+		vetor db 108 dup(0) 
+		flag_esq_dir db 0 ; se tiver peçaas iguais a esq ou dir = 1
+		flag_cim_baix db 0 ;se tiver peçaas iguais cima ou baixo = 1
+		ind_alvo db 0 ; indicie no vetor do alvo que foi escolhe
+		zona_tipo db 0,0 ; [tipo = 0 � h� explos�o, tipo=1 Horizontal, tipo=2 Vertical, tipo = 3 Estrela] [Indice em Bx do centro]
+   
+    ;~~~~~~~~~~~~~~~~~ Dados do vetor do tabuleiro ~~~~~~~~~~~~~~~~~~~~~~
+    
+    ;~~~~~~~~~~~~~~~~~~Informações sobre o tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~
+       
+        tamX db 9 ; Largura do tabuleiro
+        tamY db 6 ; Altura do tabuleiro
+        iniX dw 60 ; Primeiro ponto do tabuleiro em X
+        iniY db 8 ; Primeiro ponto do tabuleiro em Y
+    
+    ;~~~~~~~~~~~~~~~~~~Informações sobre o tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
    ;~~~~~~~~~~~~~~~~~Variáveis do Cursor~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
         string	db	"Teste prático de T.I",0
 		Car		db	32	; Guarda um caracter do Ecran 
@@ -40,14 +64,6 @@ DADOS	segment para public 'data'
    ;~~~~~~~~~~~~~~~~~Variáveis do Tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
 
-    ;~~~~~~~~~~~~~~~~~~Informações sobre o tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~
-       
-        tamX db 9 ; Largura do tabuleiro
-        tamY db 6 ; Altura do tabuleiro
-        iniX dw 60 ; Primeiro ponto do tabuleiro em X
-        iniY db 8 ; Primeiro ponto do tabuleiro em Y
-    
-    ;~~~~~~~~~~~~~~~~~~Informações sobre o tabuleiro~~~~~~~~~~~~~~~~~~~~~~~~~
 
     ;~~~~~~~~~~~~~~~~~~~~~~~~Variáveis dos Menus~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -63,7 +79,7 @@ DADOS	segment para public 'data'
 				db "              1 - Jogar                                                 ",10,13
 				db "              2 - Ver Pontuacoes                                        ",10,13
 				db "              3 - Configuracao da Grelha                                ",10,13
-				db "              4 - Sair                                                  ",10,13
+				db "              'q' - Sair                                                  ",10,13
 				db "                                                                        ",10,13
 				db "        Input: ",10, 13,10, 13,10, 13,10, 13
 				db  '$'
@@ -89,6 +105,14 @@ goto_xy	macro		POSx,POSy
 		int		10h
 endm
 
+;########################################################################
+;MOSTRA - Faz o display de uma string terminada em $
+
+MOSTRA MACRO STR 
+	MOV AH,09H
+	LEA DX,STR 
+	INT 21H
+ENDM
 ;########################################################################
 ;ROTINA PARA APAGAR ECRAN
 
@@ -155,7 +179,7 @@ CICLOMENU:
         
         
 		FORA: 
-			CMP AL, 27 ; TECLA ESCAPE
+			CMP AL, 113 ; TECLA ESCAPE
 			JE fim;
 		
 	JMP CICLOMENU
@@ -227,7 +251,7 @@ novacor:
 		mov	es:[bx],   dh		
 		mov	es:[bx+1], al	; Coloca as caracter�sticas de cor da posi��o atual 
 		inc	bx		
-		inc	bx		; pr�xima posi��o e ecran dois bytes � frente 
+		inc	bx		; próxima posição e ecran dois bytes � frente 
 
 		mov 	dh,	   carTab	; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
 		mov	es:[bx],   dh
@@ -235,6 +259,9 @@ novacor:
 		inc	bx
 		inc	bx
 		
+
+
+        
 		mov	di,1 ;delay de 1 centesimo de segundo
 		call	delay
 		loop	ciclo1		; continua at� fazer as 9 colunas que correspondem a uma liha completa
@@ -315,7 +342,7 @@ LER_SETA:
         call 		LE_TECLA
 		cmp		ah, 1
 		je		ESTEND
-		CMP 		AL, 27	;  27=> ESC ascii
+		CMP 		AL, 113	 
 		JE		FIM
 		jmp		LER_SETA
 		
@@ -353,6 +380,7 @@ ESPACO:
         cmp al,71
 
 fim:	
+        call APAGA_ECRAN
 		mov		ah,4CH
 		INT		21H
 Main	endp
