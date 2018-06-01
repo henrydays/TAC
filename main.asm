@@ -670,7 +670,7 @@ IMPRIME:
 LER_SETA:
    
 	
-		;call	ImprimeVetor
+		call	ImprimeVetor
 
 			
 		call        LE_TECLA
