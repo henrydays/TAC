@@ -3,6 +3,10 @@
 .STACK 2048
  
 DADOS   SEGMENT PARA 'DATA'
+
+		pontuacao db 0
+		pontuacao_total db 0
+	    Cor3        db  7 
     ; --- DADOS PRINCIPAIS ---
 		POSx_in db 4 ;posicao X dentro do tabul
 		POSy_in db 3 ;posicao Y dentro do tabul
@@ -42,6 +46,8 @@ DADOS   SEGMENT PARA 'DATA'
     ; --- !VARIAVEIS DO CURSOR ---
 		
 	; --- VARIAVEIS DE MSG DO MENU ---	
+
+	mess  db "los",10,13
 	Menu    db      10, 13, 10, 13, "-------------------------------",0Dh,0Ah,0Dh,0Ah,09h
 				db      "1 - Jogar",0Dh,0Ah,09h 
 				db      "2 - Ver Pontuacoes",0Dh,0Ah,09h     
@@ -348,10 +354,27 @@ PRINC PROC
 	MOV		AX,0B800H
 	MOV		ES,AX
 	
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CICLOMENU:
 	
 		goto_xy 0,0
+		
+		mov POSx_in, 4 
+		 mov POSy_in , 3 
+
+		mov POSy ,11
+		mov POSx, 38
+		mov  iniTabY ,8
+		mov  iniTabX ,30
+		mov POSya,5
+		mov POSxa,10
+
+		mov iniX, 60
+		mov iniY,8
+		mov tamX ,9
+		mov tamY,6
+
+		
 		
         ; ------LIMPAR ECRA ----
 		
@@ -368,9 +391,12 @@ PRINC PROC
 
             mov  ah, 07h ; Esperar que o utilizador insira um caracter
             int  21h
-            cmp  al, '1' ; Se inserir 1
+            
+			cmp  al, '1' ; Se inserir 1
                 je Jogar
 			
+            cmp al,113
+                je fim
 			
 			
 		;SUBMENU: ; sub menu do desenho
@@ -421,7 +447,8 @@ jogar:
      mov Segundos, 61 ; iniciou o jogo
 	 goto_xy	20,20
 	
-		
+
+
 	 
  
 ; --- TABULEIRO ---
@@ -485,6 +512,7 @@ novacor:
 	  
         mov vetor[si], al 
 		inc si
+
 	    mov vetor[si], al 
 		inc si
 
@@ -536,9 +564,11 @@ novacor:
  
 CICLO_CURSOR:       
         
+	
+
         goto_xy POSxa,POSya ; Vai para a posi��o anterior do cursor
 
-		call	ImprimeVetor
+	
 
         mov     ah, 02h
         mov     dl, Car ; Repoe Caracter guardado
@@ -584,14 +614,15 @@ CICLO_CURSOR:
        
        
         goto_xy     77,0        ; Mostra o caractr que estava na posi��o do AVATAR
-        mov     ah, 02h     ; IMPRIME caracter da posi��o no canto
+        mov     ah, 02h         ; IMPRIME caracter da posi��o no canto
         mov     dl, Car
         int     21H        
        
         goto_xy     78,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
-        mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
+        mov     ah, 02h     	; IMPRIME caracter2 da posição no canto
         mov     dl, Cor2   
         int     21H 
+
 
 		goto_xy     60,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
 		mov al, 48
@@ -606,18 +637,26 @@ CICLO_CURSOR:
         mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
         mov     dl, al   
         int     21H 
-       
-   
+    
         goto_xy     POSx,POSy   ;Vai para posi��o do cursor
 
-IMPRIME:    mov     ah, 02h
-        mov     dl, 177 ;Coloca AVATAR1  Gon�alo Muda para 176, 177, 178 e v� qual fica melhor
+		cmp al,113
+		je FIM
+		
+
+
+        
+
+IMPRIME:    
+		
+		mov     ah, 02h
+        mov     dl, 178 ;Coloca AVATAR1  Gon�alo Muda para 176, 177, 178 e v� qual fica melhor
         int     21H
        
         inc     POSx
         goto_xy     POSx,POSy      
         mov     ah, 02h
-        mov     dl, 177 ; Coloca AVATAR2 Gon�alo Muda para 176, 177, 178 e v� qual fica melhor
+        mov     dl, 178 ; Coloca AVATAR2 Gon�alo Muda para 176, 177, 178 e v� qual fica melhor
         int     21H
         dec     POSx
        
@@ -630,42 +669,203 @@ IMPRIME:    mov     ah, 02h
        
 LER_SETA:
    
-; ---- MOSTRA VETOR --- BrunoFilipe22/05/2018
-; xor si,si
-; xor di,di
-	; ;linha_v
-	; ;coluna_v
-	; br:
-	; mov coluna_v,0
-	; inc linha_v
-	; mostra_vetor:
-		
-		; cmp coluna_v,18
-		; je br
-				
-		; goto_xy coluna_v,linha_v	
-		; mov     ah, 02h     
-        ; mov     dl, vetor[si]  
-        ; int     21H
-		
-		; inc si
-		; inc coluna_v
-		
-		; cmp si, 108
-		; jne mostra_vetor
-		
-		; mov coluna_v,0
-		; mov linha_v,0
-; ---- !MOSTRA VETOR ---
+	
+		;call	ImprimeVetor
 
+			
 		call        LE_TECLA
-        cmp     ah, 1
+
+	
+		cmp     ah, 1
         je      ESTEND
-        CMP         AL, 27  ; ESCAPE
-        JE      FIM
+     
+        
+       	cmp AL,113
+		   
+		je CICLOMENU
+		
+
+ 
+		cmp AL, 120
+		
+		je OLHAEXPLOSAO
+		
+        
         jmp     LER_SETA
-       
-ESTEND:     cmp         al,48h
+
+OLHAEXPLOSAO:
+
+ 
+		
+		mov ax, 18
+
+		mov cl, POSy_in
+		mul cl
+	
+		add bx,ax
+
+		mov ax,2
+		mov cl, POSx_in
+		mul cl
+		add bx, ax
+
+	
+		jmp EXPLODE_DIR_F
+
+
+EXPLODE_DIR_F:
+
+		
+		goto_xy     50,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
+	
+		mov al ,vetor[bx]
+
+		cmp vetor[bx+2],al
+		
+		jne EXPLODE_DIR_T
+		mov vetor[bx],0
+		mov vetor[bx+1],0
+
+		mov vetor[bx+2],0
+		
+		mov vetor[bx+3],0
+
+		inc pontuacao
+		
+		jmp EXPLODE_DIR_T
+
+EXPLODE_DIR_T:
+
+
+		;mov al ,vetor[bx] 
+		cmp vetor[bx-15],al
+		jne EXPLODE_DIR_B
+		
+		mov vetor[bx],0
+		mov vetor[bx+1],0
+
+		mov vetor[bx-15],0
+		mov vetor[bx-16],0
+		inc pontuacao
+		jmp EXPLODE_DIR_B
+		 
+EXPLODE_DIR_B:
+
+	;	mov al,vetor[bx]
+		
+		cmp vetor[bx+20],al
+		
+		jne	EXPLODE_CIM
+		mov vetor[bx],0
+		mov vetor[bx+1],0
+
+		
+		mov vetor[bx+20],0
+		
+		mov vetor[bx+21],0
+		inc pontuacao
+		jmp EXPLODE_CIM
+
+EXPLODE_CIM:
+		
+	;	mov al,vetor[bx]
+		
+		cmp vetor[bx-18],al
+		
+		jne	EXPLODE_BAI
+			mov vetor[bx],0
+		mov vetor[bx+1],0
+
+		
+		mov vetor[bx-18],0
+		
+		mov vetor[bx-17],0
+		inc pontuacao
+		jmp EXPLODE_BAI
+
+EXPLODE_BAI:
+	;	mov al,vetor[bx]
+		
+		cmp vetor[bx+18],al
+		
+		jne EXPLODE_ESQ_T
+			mov vetor[bx],0
+		mov vetor[bx+1],0
+
+		
+		mov vetor[bx+18],0
+		
+		mov vetor[bx+19],0
+		inc pontuacao
+		jmp EXPLODE_ESQ_T
+
+EXPLODE_ESQ_T:
+
+		;mov al,vetor[bx]
+		
+		cmp vetor[bx-20],al
+		
+		jne EXPLODE_ESQ_F
+	mov vetor[bx],0
+		mov vetor[bx+1],0
+
+		
+		mov vetor[bx-20],0
+		
+		mov vetor[bx-19],0
+		inc pontuacao
+		jmp EXPLODE_ESQ_F
+
+EXPLODE_ESQ_F:
+
+	;	mov al,vetor[bx]
+		
+		cmp vetor[bx-2],al
+		
+		jne EXPLODE_ESQ_B
+		
+
+			mov vetor[bx],0
+		mov vetor[bx+1],0
+
+		mov vetor[bx-2],0
+		
+		mov vetor[bx-1],0
+		inc pontuacao
+		jmp EXPLODE_ESQ_B
+
+EXPLODE_ESQ_B:
+
+		
+	;	mov al,vetor[bx]
+		
+	
+		cmp vetor[bx+17],al
+		
+		jne LER_SETA
+		
+		mov vetor[bx+16],0
+		
+		mov vetor[bx+17],0
+		
+		mov vetor[bx],0
+		mov vetor[bx+1],0
+
+		inc pontuacao
+
+
+		jmp LER_SETA
+
+APAGA_MEIO:
+
+		 
+		mov vetor[bx],0
+		mov vetor[bx+1],0
+		mov pontuacao,0
+		jmp LER_SETA
+
+ESTEND:     
+		cmp         al,48h
         jne     BAIXO
         mov ah,iniTabY
         cmp ah,POSy
@@ -675,8 +875,10 @@ ESTEND:     cmp         al,48h
         jmp     CICLO_CURSOR ;repor as cenas
  
  
-BAIXO:      cmp     al,50h
+BAIXO:     
+        cmp     al,50h
         jne     ESQUERDA
+                		
         mov ah,iniTabY
         add ah,5 ;;limite inferior
         cmp ah,POSy
@@ -698,8 +900,7 @@ ESQUERDA:
  
  
 DIREITA:
-        cmp     al,4Dh
-        jne     ESPACO
+      
         mov ah,iniTabX
         add ah,16 ;; posiscao x[8] -> 16 cursor ocupa dois espacos
         cmp ah,POSx
@@ -708,259 +909,51 @@ DIREITA:
         inc     POSx        ;Direita
 		inc     POSx_in        ;Direita
         jmp     CICLO_CURSOR ;repor as cenas
-		
-ESPACO:
-        
-       
-        mov  ah, 07h ; Esperar que o utilizador insira um caracter
-        int  21h
-        cmp  al, ' '  ; Se inserir 1
-     
-        jne     LER_SETA
-        mov ah,iniTabX
-        add ah,16 ;; posiscao x[8] -> 16 cursor ocupa dois espacos
-        cmp ah,POSx
-        je Teste
-        
-		
-		
-		;-- PUMMMM E TCHHHHHHH
-		; vector -> Array onde temos o numero de cores do tabul
-		; Cor2 -> Cor que o cursor esta em cima
-		;flag_esq_dir -> se tiver pe�as iguais a esq ou dir = 1
-		;flag_cim_baix -> se tiver pe�as iguais cima ou baixo = 1
-		; POS_PRETENDIDA = ((POSy_in - 1)*19)+POSx_in
-		;Ver a Dir e Esq
-		xor di, di
-		xor ax, ax
-		xor bx, bx
-		xor cx, cx
-		xor dx, dx
-				
-		mov ax, 2
-		mul POSx_in
-		mov cx, ax
 
-		mov ax, 18
-		mul POSy_in
-		
-		add cx, ax
-		
-		mov bx,cx		
-		; mov vetor[bx], 0
-		; inc bx
-		; mov vetor[bx], 0
-		; mov bx, 16
-		; mov vetor[bx], 0
-		
-				
-		xor dx,dx
-		mov dl, vetor[bx] ;guardar conteudo do vector
-		
-	explosao_dir:
-		cmp POSx_in, 8
-		je explosao_esq
-		cmp dl, vetor[bx+2]
-		jne explosao_esq 
-		muda_dir:
-
-			mov vetor[bx], 0
-			mov vetor[bx+1], 0
-			mov vetor[bx+2], 0
-			mov vetor[bx+3], 0
-			
-			; ;ir ao ecra tirar as pe�as
-			; xor si, si
-			; xor cx, cx
-			; xor ax,ax
-			
-			; mov ax, 1
-			; mul POSx
-			; mov cx, ax
-
-			; mov ax, 80
-			; mul POSy
-			
-			; add cx, ax
-					
-			; inc_si:
-				; inc si
-				; inc si
-			; loop inc_si
-			
-			; mov dh,    carESP   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
-			; mov al, 0000000b
-			; ;-------------------
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atual
-			; add si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atual
-			; ;-------------------
-			; add si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o a frente
-			; add si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o frente
-						
-	explosao_esq:
-		cmp POSx_in, 0
-		je explosao_baixo	
-		cmp dl, vetor[bx-2]
-		jne explosao_baixo 
-		muda_esq:
-
-			mov vetor[bx], 0
-			mov vetor[bx+1], 0			
-			mov vetor[bx-1], 0
-			mov vetor[bx-2], 0
-			
-			; ;ir ao ecra tirar as pe�as
-			; xor si, si
-			; xor cx, cx
-			; xor dx,dx
-			; xor ax,ax
-			
-			; mov ax, 1
-			; mul POSx
-			; mov cx, ax
-
-			; mov ax, 80
-			; mul POSy
-			
-			; add cx, ax
-					
-			; inc_si1:
-				; inc si
-				; inc si
-			; loop inc_si1
-			
-			; mov dh,    carESP   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
-			; mov al, 0000000b
-			; ;-------------------
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atual
-			; add si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atual
-			; ;-------------------
-			; sub si, 4
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atras
-			; sub si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atras
-			; ;-------------------
-			
-	explosao_baixo:
-		cmp POSy_in, 5
-		je explosao_cima
-		cmp dl, vetor[bx+18]
-		jne explosao_cima 
-		
-		muda_baixo:
-			mov vetor[bx], 0
-			mov vetor[bx+1], 0
-			mov vetor[bx+18], 0
-			mov vetor[bx+19], 0
-			
-			; ;ir ao ecra tirar as pe�as
-			; xor si, si
-			; xor cx, cx
-			; xor dx,dx
-			; xor ax,ax
-			
-			; mov ax, 1
-			; mul POSx
-			; mov cx, ax
-
-			; mov ax, 80
-			; mul POSy
-			
-			; add cx, ax
-					
-			; inc_si3:
-				; inc si
-				; inc si
-			; loop inc_si3
-			
-			; mov dh,    carESP   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
-			; mov al, 0000000b
-			; ;-------------------
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atual
-			; add si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atual
-			; ;-------------------
-			; add si, 158
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o a baixo
-			; add si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o baixo
-	
-	explosao_cima:
-		cmp POSy_in, 0
-		je CICLO_CURSOR
-		cmp dl, vetor[bx-18]
-		jne CICLO_CURSOR
-		
-		muda_cima:
-			mov vetor[bx-18], 0
-			mov vetor[bx-17], 0
-			mov vetor[bx], 0
-			mov vetor[bx+1], 0
-			
-			; ;ir ao ecra tirar as pe�as
-			; xor si, si
-			; xor cx, cx
-			; xor dx,dx
-			; xor ax,ax
-			
-			; mov ax, 1
-			; mul POSx
-			; mov cx, ax
-
-			; mov ax, 80
-			; mul POSy
-			
-			; add cx, ax
-					
-			; inc_si2:
-				; inc si
-				; inc si
-			; loop inc_si2
-			
-			; mov dh,    carESP   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
-			; mov al, 0000000b
-			; ;-------------------
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atual
-			; add si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o atual
-			; ;-------------------
-			; sub si, 160
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o cima
-			; sub si, 2
-			; mov es:[si],   dh      
-			; mov es:[si+1], al   ; Coloca a cor na posi��o cima
-			; ;-------------------
-	
-		; ;-- !PUMMMM E TCHHHHHHH
-		
-		
-    jmp CICLO_CURSOR ;repor as cenas
 Teste:
+ 
     jmp CICLO_CURSOR
 ; ---- !CURSOR ---
+
+;fodasse:
+;mov cx,cursor
+;mov ah, POSx
+;mov al, POSy
+;add al,ah
+;mov cx,al
+;sub cx,11
+;je cor
+;add cx,1
+;je cor
+;add cx,1
+;je cor
+;add cx,8
+;je cor
+;add cx,2
+;je cor
+;add cx,8
+;je cor
+;add cx,1
+;je cor
+;add cx,1
+;je cor
+
+;cor: 
+;xor bx,bx
+;mov bx,cx
+;mov dx,vector[bx]
+;cmp dx,Cor
+;je preto
+
+;preto:
+;mov vector[bx],;cor preta
+;add pontuacao,1
+;jmp
 
  
  
 FIM:
+
     MOV AH,4Ch
     INT 21h
 PRINC ENDP
