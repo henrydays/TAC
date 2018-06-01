@@ -48,6 +48,7 @@ DADOS   SEGMENT PARA 'DATA'
 	; --- VARIAVEIS DE MSG DO MENU ---	
 
 	mess  db "los",10,13
+	
 	Menu db " ",10,13   
 		db "																	     ",10,13
 		db "  	 _______ _______ __   __   _______ ___     _______ _______ _______   ",10,13
@@ -402,37 +403,30 @@ PRINC PROC
             int  21h
             
 			cmp  al, '1' ; Se inserir 1
-                je Jogar
+                je SUBMENU
 			
             cmp al,113
                 je fim
 			
 			
-		;SUBMENU: ; sub menu do desenho
+		SUBMENU: ; sub menu do desenho
 		
-			;CICLOd:
 		
-			;goto_xy 4,0
-						; funcao apagar ecran
-			;MOV		AX,0B800H
-			;MOV		ES,AX
-			;call APAGA_ECRAN
-			; fim apaga ecran
+			call APAGA_ECRAN
 			
-			;lea     dx, SubMenu2
-			;mov     ah, 09h
-			;int     21h
-			;call LE_TECLA
-				;D1:			
-					;CMP 	AL, '1'	  ; jogar - definer labirinto como defalt
-					;JNE		D2
-					;CALL	defineDefault
-					;jmp		CICLO
-				;FORAd: 
-					;CMP AL, 27 ; TECLA ESCAPE so sub menu do desenho
-					;JE CICLOMENU;
-					
-			;jmp CICLOd
+			lea     dx, SubMenu2
+			mov     ah, 09h
+			int     21h
+				
+		mov  ah, 07h ; Esperar que o utilizador insira um caracter
+            int  21h
+            
+			cmp  al, '1' ; Se inserir 1
+                je Jogar
+			
+            cmp al,113
+                je fim
+
 		FORA: 
 			CMP AL, 27 ; TECLA ESCAPE
 			JE fim;
