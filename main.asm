@@ -4,6 +4,7 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
+		editor db 0
 		pontuacao db 0
 		pontuacao_total db 0
 	    Cor3        db  7 
@@ -50,7 +51,6 @@ DADOS   SEGMENT PARA 'DATA'
 		
 	; --- VARIAVEIS DE MSG DO MENU ---	
 
-	mess  db "los",10,13
 	Menu db " ",10,13   
 		db "																	     ",10,13
 		db "  	 _______ _______ __   __   _______ ___     _______ _______ _______   ",10,13
@@ -69,6 +69,25 @@ DADOS   SEGMENT PARA 'DATA'
 		db "		Digite um numero... $											 ",10, 13
 				
 				
+	MJogar db " ",10,13   
+		db "																	     ",10,13
+		db "  	 _______ _______ __   __   _______ ___     _______ _______ _______   ",10,13
+		db "   	|       |       |  | |  | |  _    |   |   |   _   |       |       |  ",10,13
+		db "   	|_     _|   _   |  |_|  | | |_|   |   |   |  |_|  |  _____|_     _|  ",10,13
+  		db "   	  |   | |  | |  |       | |       |   |   |       | |_____  |   |    ",10,13
+  		db "   	  |   | |  |_|  |_     _| |  _   ||   |___|       |_____  | |   |    ",10,13
+  		db "   	  |   | |       | |   |   | |_|   |       |   _   |_____| | |   |    ",10,13
+  		db "   	  |___| |_______| |___|   |_______|_______|__| |__|_______| |___|    ",10,13
+ 		db "																	     ",10,13
+		db "																	     ",10,13
+		db " 		1 - Geracao de Grelha de Forma Aleatori						     ",10,13
+		db "		2 - Carregar Grelha											     ",10,13 
+		db "																	     ",10,13
+		db "		4 - Voltar													     ",10,13
+		db "																	     ",10,13
+		db "		Digite um numero... $											 ",10, 13
+				
+							
 				
 	SubMenu2    db      10, 13, 10, 13, "-------------------------------",0Dh,0Ah,0Dh,0Ah,09h
 				db      "1 - Geracao de Grelha de Forma Aleatoria",0Dh,0Ah,09h 
@@ -213,6 +232,7 @@ ENDM
     ; LE UMA TECLA
     LE_TECLA    PROC
  sem_tecla:
+		
 		call trata_horas_jogo
 		mov	ah,0bh
 		int 21h
@@ -371,20 +391,6 @@ PRINC PROC
 	
 		goto_xy 0,0
 		
-		mov POSx_in, 4 
-		 mov POSy_in , 3 
-
-		mov POSy ,11
-		mov POSx, 38
-		mov  iniTabY ,8
-		mov  iniTabX ,30
-		mov POSya,5
-		mov POSxa,10
-
-		mov iniX, 60
-		mov iniY,8
-		mov tamX ,9
-		mov tamY,6
 
 		
 		
@@ -404,38 +410,35 @@ PRINC PROC
             mov  ah, 07h ; Esperar que o utilizador insira um caracter
             int  21h
             
-			cmp  al, '1' ; Se inserir 1
-                je Jogar
+			cmp  al, 49 ; Se inserir 1
+              je MENUJOGAR
 			
-            cmp al,113
+			cmp al,51
+				je CONF_GRELH
+            cmp al,52
                 je fim
 			
+			jmp CICLOMENU
+		MENUJOGAR: ; sub menu do desenho
+
+			call APAGA_ECRAN
+			lea     dx, MJogar
+			mov     ah, 09h
+			int     21h
+				
+			mov  ah, 07h ; Esperar que o utilizador insira um caracter
+            int  21h
+            	
+			mov editor,0
+			cmp  al, 49 ; Se inserir 1
+                je Jogar
 			
-		;SUBMENU: ; sub menu do desenho
-		
-			;CICLOd:
-		
-			;goto_xy 4,0
-						; funcao apagar ecran
-			;MOV		AX,0B800H
-			;MOV		ES,AX
-			;call APAGA_ECRAN
-			; fim apaga ecran
+            cmp al,52
+                je CICLOMENU
 			
-			;lea     dx, SubMenu2
-			;mov     ah, 09h
-			;int     21h
-			;call LE_TECLA
-				;D1:			
-					;CMP 	AL, '1'	  ; jogar - definer labirinto como defalt
-					;JNE		D2
-					;CALL	defineDefault
-					;jmp		CICLO
-				;FORAd: 
-					;CMP AL, 27 ; TECLA ESCAPE so sub menu do desenho
-					;JE CICLOMENU;
-					
-			;jmp CICLOd
+			jmp MENUJOGAR
+
+
 		FORA: 
 			CMP AL, 27 ; TECLA ESCAPE
 			JE fim;
@@ -447,7 +450,12 @@ PRINC PROC
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
-	
+CONF_GRELH:
+
+		mov editor,1
+		jmp jogar
+
+		jmp CICLOMENU
 
 jogar:
 ; ------LIMPAR ECRA ----
@@ -456,8 +464,15 @@ jogar:
 		call APAGA_ECRAN
 ; ------ !LIMPAR ECRA ----
  
-     mov Segundos, 61 ; iniciou o jogo
-	 goto_xy	20,20
+		
+		mov iniX, 60
+		mov iniY,8
+		mov tamX ,9
+		mov tamY,6
+
+
+   		  mov Segundos, 61 ; iniciou o jogo
+		 goto_xy  20,20
 	
 
 
@@ -678,11 +693,15 @@ IMPRIME:
         mov     POSxa, al
         mov     al, POSy    ; Guarda a posi��o do cursor
         mov         POSya, al
-       
+
+
+
+   
 LER_SETA:
    
 	
 		call	ImprimeVetor
+<<<<<<< HEAD
 		call        LE_TECLA
 
 
@@ -691,16 +710,72 @@ LER_SETA:
      
         
        	cmp AL,113
-		je CICLOMENU
+=======
+	
+		call      LE_TECLA
+
+		cmp     ah, 1
+        je      ESTEND
+
 		
+       	cmp AL,52
+>>>>>>> 10e85e23e84bd2ef3f481e3720144eae3a8368de
+		je CICLOMENU
+	
+		
+<<<<<<< HEAD
  
 		cmp AL, 120
 		je OLHAEXPLOSAO
+=======
+		cmp AL, 32
+		je OLHAEXPLOSAO
+
+		cmp AL, 13
+		je OLHAEXPLOSAO
+		
+
+>>>>>>> 10e85e23e84bd2ef3f481e3720144eae3a8368de
         
         jmp     LER_SETA
 
 
 OLHAEXPLOSAO:
+
+<<<<<<< HEAD
+=======
+		cmp editor,1
+		je MUDACOR
+
+>>>>>>> 10e85e23e84bd2ef3f481e3720144eae3a8368de
+		mov ax, 18
+
+		mov cl, POSy_in
+		mul cl
+	
+		add bx,ax
+
+		mov ax,2
+		mov cl, POSx_in
+		mul cl
+		add bx, ax
+
+		jmp EXPLODE_DIR_F
+
+MUDACOR:
+
+		cmp editor, 0
+		je CICLOMENU
+		
+		cmp al, 32
+
+		je METECOR
+		
+		jmp LER_SETA
+
+METECOR:
+		
+		xor bx,bx 
 
 		mov ax, 18
 
@@ -714,9 +789,15 @@ OLHAEXPLOSAO:
 		mul cl
 		add bx, ax
 
+		call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
+        pop ax ;        ; Vai buscar 'a pilha o n�mero aleat�rio
+        and al,01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
+        cmp al, 0       ; Se o fundo de ecran � preto
+		je METECOR
+		mov vetor[bx],al
+		mov vetor[bx+1],al
 	
-		jmp EXPLODE_DIR_F
-
+		jmp LER_SETA
 
 EXPLODE_DIR_F:
 
@@ -728,6 +809,7 @@ EXPLODE_DIR_F:
 		jne EXPLODE_DIR_T
 
 		mov vetor[bx],0
+		
 		mov vetor[bx+1],0
 
 		mov vetor[bx+2],0
@@ -743,14 +825,19 @@ EXPLODE_DIR_T:
 
 		;mov al ,vetor[bx] 
 		cmp vetor[bx-15],al
+		
 		jne EXPLODE_DIR_B
 		
 		mov vetor[bx],0
+		
 		mov vetor[bx+1],0
 
 		mov vetor[bx-15],0
+	
 		mov vetor[bx-16],0
+	
 		inc pontuacao
+	
 		jmp EXPLODE_DIR_B
 		 
 EXPLODE_DIR_B:
@@ -760,19 +847,22 @@ EXPLODE_DIR_B:
 		cmp vetor[bx+20],al
 		
 		jne	EXPLODE_CIM
+
 		mov vetor[bx],0
+		
 		mov vetor[bx+1],0
 
-		
 		mov vetor[bx+20],0
 		
 		mov vetor[bx+21],0
+
 		inc pontuacao
+
 		jmp EXPLODE_CIM
 
 EXPLODE_CIM:
 		
-	;	mov al,vetor[bx]
+    ;	mov al,vetor[bx]
 		
 		cmp vetor[bx-18],al
 		
@@ -963,43 +1053,6 @@ DIREITA:
 Teste:
  
     jmp CICLO_CURSOR
-; ---- !CURSOR ---
-
-;fodasse:
-;mov cx,cursor
-;mov ah, POSx
-;mov al, POSy
-;add al,ah
-;mov cx,al
-;sub cx,11
-;je cor
-;add cx,1
-;je cor
-;add cx,1
-;je cor
-;add cx,8
-;je cor
-;add cx,2
-;je cor
-;add cx,8
-;je cor
-;add cx,1
-;je cor
-;add cx,1
-;je cor
-
-;cor: 
-;xor bx,bx
-;mov bx,cx
-;mov dx,vector[bx]
-;cmp dx,Cor
-;je preto
-
-;preto:
-;mov vector[bx],;cor preta
-;add pontuacao,1
-;jmp
-
  
  
 FIM:
