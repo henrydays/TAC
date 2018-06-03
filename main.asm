@@ -933,7 +933,7 @@ EXPLODE_ESQ_B:
 
 LER_PRETOS:
 		
-		call delay
+		
         xor bx,bx
         mov ax, 18
 		mov cl, nlinha
@@ -976,6 +976,7 @@ RESET:
 
 CICLO_PUTAS:
 		
+
 		sub bx, ax
 		mov dl, vetor[bx] 
 		mov dh, vetor[bx-18]
