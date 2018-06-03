@@ -15,6 +15,9 @@ DADOS   SEGMENT PARA 'DATA'
 		flag_cim_baix db 0 ;se tiver pe�as iguais cima ou baixo = 1
 		ind_alvo db 0 ; indicie no vetor do alvo que foi escolhe
 		zona_tipo db 0,0 ; [tipo = 0 � h� explos�o, tipo=1 Horizontal, tipo=2 Vertical, tipo = 3 Estrela] [Indice em Bx do centro]
+		nlinha db 5
+		aux db 0
+		aux2 db 0
     ; --- !DADOS PRINCIPAIS ---
    
     ; --- DADOS INICIAIS ---
@@ -32,7 +35,7 @@ DADOS   SEGMENT PARA 'DATA'
     ; --- !VARIAVEIS DO TABULEIRO ---
    
     ; --- VARIAVEIS DO CURSOR ---
-        string  db  "Teste pr�tico de T.I",0
+        string  db  "Teste pr�tico de T.I $"
         Car     db  32  ; Guarda um caracter do Ecran
         Cor     db  7   ; Guarda os atributos de cor do caracter
         Car2        db  32  ; Guarda um caracter do Ecran
@@ -680,32 +683,25 @@ LER_SETA:
    
 	
 		call	ImprimeVetor
-
-			
 		call        LE_TECLA
 
-	
+
 		cmp     ah, 1
         je      ESTEND
      
         
        	cmp AL,113
-		   
 		je CICLOMENU
 		
-
  
 		cmp AL, 120
-		
 		je OLHAEXPLOSAO
-		
         
         jmp     LER_SETA
 
+
 OLHAEXPLOSAO:
 
- 
-		
 		mov ax, 18
 
 		mov cl, POSy_in
@@ -724,14 +720,13 @@ OLHAEXPLOSAO:
 
 EXPLODE_DIR_F:
 
-		
 		goto_xy     50,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
 	
 		mov al ,vetor[bx]
 
 		cmp vetor[bx+2],al
-		
 		jne EXPLODE_DIR_T
+
 		mov vetor[bx],0
 		mov vetor[bx+1],0
 
@@ -798,7 +793,8 @@ EXPLODE_BAI:
 		cmp vetor[bx+18],al
 		
 		jne EXPLODE_ESQ_T
-			mov vetor[bx],0
+
+		mov vetor[bx],0
 		mov vetor[bx+1],0
 
 		
@@ -815,13 +811,13 @@ EXPLODE_ESQ_T:
 		cmp vetor[bx-20],al
 		
 		jne EXPLODE_ESQ_F
-	mov vetor[bx],0
+	    mov vetor[bx],0
 		mov vetor[bx+1],0
 
 		
 		mov vetor[bx-20],0
-		
 		mov vetor[bx-19],0
+
 		inc pontuacao
 		jmp EXPLODE_ESQ_F
 
@@ -830,11 +826,10 @@ EXPLODE_ESQ_F:
 	;	mov al,vetor[bx]
 		
 		cmp vetor[bx-2],al
-		
 		jne EXPLODE_ESQ_B
 		
 
-			mov vetor[bx],0
+	    mov vetor[bx],0
 		mov vetor[bx+1],0
 
 		mov vetor[bx-2],0
@@ -847,14 +842,12 @@ EXPLODE_ESQ_B:
 
 		
 	;	mov al,vetor[bx]
-		
-	
+	    mov nlinha,5
+
 		cmp vetor[bx+17],al
-		
-		jne LER_SETA
+		jne LER_PRETOS
 		
 		mov vetor[bx+16],0
-		
 		mov vetor[bx+17],0
 		
 		mov vetor[bx],0
@@ -862,16 +855,64 @@ EXPLODE_ESQ_B:
 
 		inc pontuacao
 
+		jmp LER_PRETOS
+		
+		
+;######################################################################################################		
 
-		jmp LER_SETA
 
-APAGA_MEIO:
+LER_PRETOS:
+        xor bx,bx
+        mov ax, 18
+		mov cl, nlinha
+		mul cl
+	
+		add bx, ax
 
-		 
-		mov vetor[bx],0
-		mov vetor[bx+1],0
-		mov pontuacao,0
-		jmp LER_SETA
+		xor ax,ax
+		xor cx,cx
+
+		mov ax, 2
+		mov cl, POSx_in   ;fazer para +2 e -2
+		mul cl
+
+		add bx, ax
+
+		cmp vetor[bx],0000
+		je RESET
+		sub nlinha, 1
+		cmp nlinha, 0
+		je LER_SETA
+		jmp LER_PRETOS
+
+RESET:
+        xor dx,dx
+		xor ax,ax
+        mov aux, 0
+		mov al, aux ;al ou ah
+		mov aux2, 0
+		mov cl, nlinha
+		jmp CICLO_PUTAS
+
+
+CICLO_PUTAS:
+		
+		sub bx, ax
+		mov dl, vetor[bx] 
+		mov dh, vetor[bx-18]
+		mov dl, dh
+		mov vetor[bx], dl
+		mov vetor[bx+1], dl
+
+		add ax, 18
+		add aux2, 1 ;ciclo for
+
+		cmp cl, aux2
+		je LER_PRETOS 
+		jmp CICLO_PUTAS
+
+
+;######################################################################################################	
 
 ESTEND:     
 		cmp         al,48h
