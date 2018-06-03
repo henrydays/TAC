@@ -711,11 +711,9 @@ LER_SETA:
        	cmp AL,113
 		je CICLOMENU
 	
-		
-
  
-		cmp AL, 120
-		je OLHAEXPLOSAO
+		cmp editor,1
+		je MUDACOR
 
 		cmp AL, 32
 		je OLHAEXPLOSAO
@@ -747,6 +745,8 @@ MUDACOR:
 		cmp editor, 0
 		je CICLOMENU
 		
+		cmp al,52
+		je CICLOMENU
 		cmp al, 32
 
 		je METECOR
@@ -932,6 +932,8 @@ EXPLODE_ESQ_B:
 
 
 LER_PRETOS:
+		
+		call delay
         xor bx,bx
         mov ax, 18
 		mov cl, nlinha
