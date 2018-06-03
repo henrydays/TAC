@@ -701,7 +701,6 @@ LER_SETA:
    
 	
 		call	ImprimeVetor
-<<<<<<< HEAD
 		call        LE_TECLA
 
 
@@ -710,44 +709,25 @@ LER_SETA:
      
         
        	cmp AL,113
-=======
-	
-		call      LE_TECLA
-
-		cmp     ah, 1
-        je      ESTEND
-
-		
-       	cmp AL,52
->>>>>>> 10e85e23e84bd2ef3f481e3720144eae3a8368de
 		je CICLOMENU
 	
 		
-<<<<<<< HEAD
+
  
 		cmp AL, 120
 		je OLHAEXPLOSAO
-=======
+
 		cmp AL, 32
 		je OLHAEXPLOSAO
 
 		cmp AL, 13
 		je OLHAEXPLOSAO
 		
-
->>>>>>> 10e85e23e84bd2ef3f481e3720144eae3a8368de
         
         jmp     LER_SETA
 
 
 OLHAEXPLOSAO:
-
-<<<<<<< HEAD
-=======
-		cmp editor,1
-		je MUDACOR
-
->>>>>>> 10e85e23e84bd2ef3f481e3720144eae3a8368de
 		mov ax, 18
 
 		mov cl, POSy_in
@@ -963,23 +943,30 @@ LER_PRETOS:
 		xor cx,cx
 
 		mov ax, 2
-		mov cl, POSx_in   ;fazer para +2 e -2
+		mov cl, POSx_in   
 		mul cl
 
 		add bx, ax
 
-		cmp vetor[bx],0000
+		cmp vetor[bx], 0000   
+		je RESET
+		add bx, 2
+		cmp vetor[bx], 0000   
+		je RESET
+		sub bx, 4
+		cmp vetor[bx], 0000   
 		je RESET
 		sub nlinha, 1
 		cmp nlinha, 0
 		je LER_SETA
 		jmp LER_PRETOS
 
+
 RESET:
-        xor dx,dx
-		xor ax,ax
+        ;xor dx,dx
+		;xor ax,ax
         mov aux, 0
-		mov al, aux ;al ou ah
+		mov al, aux  
 		mov aux2, 0
 		mov cl, nlinha
 		jmp CICLO_PUTAS
@@ -996,7 +983,7 @@ CICLO_PUTAS:
 
 		add ax, 18
 		add aux2, 1 ;ciclo for
-
+		
 		cmp cl, aux2
 		je LER_PRETOS 
 		jmp CICLO_PUTAS
@@ -1005,8 +992,8 @@ CICLO_PUTAS:
 ;######################################################################################################	
 
 ESTEND:     
-		cmp         al,48h
-        jne     BAIXO
+		cmp  al,48h
+        jne  BAIXO
         mov ah,iniTabY
         cmp ah,POSy
         je Teste
