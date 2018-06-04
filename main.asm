@@ -4,6 +4,9 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
+	indiceVetor dw 0
+	count db 0
+
 fimTempo db 0
 
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
@@ -858,7 +861,7 @@ IMPRIME:
 
    
 LER_SETA:
-   
+	
 		cmp fimTempo,1
 
 		je MENUJOGAR
@@ -1124,15 +1127,15 @@ EXPLODE_ESQ_F:
 
 EXPLODE_ESQ_B:
 
-		
+		mov indiceVetor, 108
 	;	mov al,vetor[bx]
 	    mov nlinha,5
 
 		cmp vetor[bx+17],al
 
-		jne LER_SETA
+		jne CICLOLIMPATABUL
 		cmp POSx_in, 0
-		je LER_SETA
+		je CICLOLIMPATABUL
 		
 		mov vetor[bx+16],0
 
@@ -1145,7 +1148,7 @@ EXPLODE_ESQ_B:
 		inc pontuacao
 		mov explodiuMeio,1
 
-		jmp LER_SETA
+		jmp CICLOLIMPATABUL
 		
 
 ESTEND:     
@@ -1193,6 +1196,57 @@ DIREITA:
         inc     POSx        ;Direita
 		inc     POSx_in        ;Direita
         jmp     CICLO_CURSOR ;repor as cenas
+
+
+CICLOLIMPATABUL:
+
+	cmp indiceVetor,0
+
+	je LER_SETA
+
+	mov cl, POSy_in
+	mov count,cl
+
+	mov bx, indiceVetor
+	mov si,bx
+	
+	cmp vetor[bx-1],0
+
+	je PUXA_COL	
+	
+	dec indiceVetor
+	dec indiceVetor
+	
+	jmp CICLOLIMPATABUL
+
+PUXA_COL:
+	
+
+	cmp count,0
+	je COR_CIMA
+	
+	;call delay
+	
+	
+	
+
+	mov dl, vetor[si-19]
+	mov dh, vetor[si-20]
+	mov vetor[si-2],dl
+	mov vetor[si-1],dh
+	
+	dec count
+	
+	sub si,18
+	jmp PUXA_COL
+
+
+COR_CIMA:
+
+	mov vetor[si-2],1
+	mov vetor[si-1],1
+	jmp CICLOLIMPATABUL
+	
 
 Teste:
  
