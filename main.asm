@@ -12,7 +12,7 @@ fimTempo db 0
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
 
 
-
+		explodiuMeio db 0
 
 		pontuacao dw 0
 		pontuacao_total db 0
@@ -612,8 +612,8 @@ jogar:
 		mov tamX ,9
 		mov tamY,6
 
-
-   		mov Segundos, 10 ; iniciou o jogo
+		mov pontuacao,0
+   		mov Segundos, 60 ; iniciou o jogo
 		
 		goto_xy  20,20
 	
@@ -808,7 +808,7 @@ CICLO_CURSOR:
 	GOTO_XY	0,4
 	MOSTRA	STR12 			
 		
-		goto_xy	POSy,POSx	
+		
 
 
 		goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
@@ -887,8 +887,17 @@ LER_SETA:
         
         jmp     LER_SETA
 
+INCREMENTA_MEIO:
+
+		inc pontuacao
+		mov explodiuMeio,0
+		jmp OLHAEXPLOSAO
 
 OLHAEXPLOSAO:
+	
+		cmp explodiuMeio,1
+		je INCREMENTA_MEIO
+
 		mov ax, 18
 
 		mov cl, POSy_in
@@ -900,6 +909,7 @@ OLHAEXPLOSAO:
 		mov cl, POSx_in
 		mul cl
 		add bx, ax
+
 
 		jmp EXPLODE_DIR_F
 
@@ -947,10 +957,17 @@ EXPLODE_DIR_F:
 
 		goto_xy     50,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
 	
+
+	
+
+		
 		mov al ,vetor[bx]
 
 		cmp vetor[bx+2],al
 		jne EXPLODE_DIR_T
+
+		cmp POSx_in,8
+		je EXPLODE_DIR_T
 
 		mov vetor[bx],0
 		
@@ -960,7 +977,10 @@ EXPLODE_DIR_F:
 		
 		mov vetor[bx+3],0
 
+		
+
 		inc pontuacao
+		mov explodiuMeio,1
 		
 		jmp EXPLODE_DIR_T
 
@@ -968,10 +988,17 @@ EXPLODE_DIR_T:
 
 
 		;mov al ,vetor[bx] 
+		
+	
+		
+		
 		cmp vetor[bx-15],al
 		
 		jne EXPLODE_DIR_B
 		
+		cmp POSx_in,8
+		je EXPLODE_DIR_B
+
 		mov vetor[bx],0
 		
 		mov vetor[bx+1],0
@@ -981,7 +1008,8 @@ EXPLODE_DIR_T:
 		mov vetor[bx-16],0
 	
 		inc pontuacao
-	
+		mov explodiuMeio,1
+
 		jmp EXPLODE_DIR_B
 		 
 EXPLODE_DIR_B:
@@ -991,6 +1019,9 @@ EXPLODE_DIR_B:
 		cmp vetor[bx+20],al
 		
 		jne	EXPLODE_CIM
+		
+		cmp POSx_in,8
+		je EXPLODE_CIM
 
 		mov vetor[bx],0
 		
@@ -1001,6 +1032,7 @@ EXPLODE_DIR_B:
 		mov vetor[bx+21],0
 
 		inc pontuacao
+		mov explodiuMeio,1
 
 		jmp EXPLODE_CIM
 
@@ -1011,7 +1043,10 @@ EXPLODE_CIM:
 		cmp vetor[bx-18],al
 		
 		jne	EXPLODE_BAI
-			mov vetor[bx],0
+		
+		
+
+		mov vetor[bx],0
 		mov vetor[bx+1],0
 
 		
@@ -1019,6 +1054,8 @@ EXPLODE_CIM:
 		
 		mov vetor[bx-17],0
 		inc pontuacao
+		mov explodiuMeio,1
+
 		jmp EXPLODE_BAI
 
 EXPLODE_BAI:
@@ -1036,6 +1073,8 @@ EXPLODE_BAI:
 		
 		mov vetor[bx+19],0
 		inc pontuacao
+		mov explodiuMeio,1
+
 		jmp EXPLODE_ESQ_T
 
 EXPLODE_ESQ_T:
@@ -1045,6 +1084,10 @@ EXPLODE_ESQ_T:
 		cmp vetor[bx-20],al
 		
 		jne EXPLODE_ESQ_F
+
+		cmp POSx_in, 0
+		je EXPLODE_ESQ_F
+
 	    mov vetor[bx],0
 		mov vetor[bx+1],0
 
@@ -1053,6 +1096,9 @@ EXPLODE_ESQ_T:
 		mov vetor[bx-19],0
 
 		inc pontuacao
+		mov explodiuMeio,1
+
+
 		jmp EXPLODE_ESQ_F
 
 EXPLODE_ESQ_F:
@@ -1062,6 +1108,8 @@ EXPLODE_ESQ_F:
 		cmp vetor[bx-2],al
 		jne EXPLODE_ESQ_B
 		
+		cmp POSx_in, 0
+		je EXPLODE_ESQ_B
 
 	    mov vetor[bx],0
 		mov vetor[bx+1],0
@@ -1070,6 +1118,8 @@ EXPLODE_ESQ_F:
 		
 		mov vetor[bx-1],0
 		inc pontuacao
+		mov explodiuMeio,1
+
 		jmp EXPLODE_ESQ_B
 
 EXPLODE_ESQ_B:
@@ -1079,86 +1129,24 @@ EXPLODE_ESQ_B:
 	    mov nlinha,5
 
 		cmp vetor[bx+17],al
-		jne LER_PRETOS
+
+		jne LER_SETA
+		cmp POSx_in, 0
+		je LER_SETA
 		
 		mov vetor[bx+16],0
+
 		mov vetor[bx+17],0
 		
 		mov vetor[bx],0
 		mov vetor[bx+1],0
 
+		
 		inc pontuacao
+		mov explodiuMeio,1
 
-		jmp LER_PRETOS
+		jmp LER_SETA
 		
-		
-;######################################################################################################		
-
-
-LER_PRETOS:
-		
-	
-        xor bx,bx
-        mov ax, 18
-		mov cl, nlinha
-		mul cl
-	
-		add bx, ax
-
-		xor ax,ax
-		xor cx,cx
-
-		mov ax, 2
-		mov cl, POSx_in   
-		mul cl
-
-		add bx, ax
-
-		cmp vetor[bx], 0000   
-		je RESET
-		add bx, 2
-		cmp vetor[bx], 0000   
-		je RESET
-		sub bx, 4
-		cmp vetor[bx], 0000   
-		je RESET
-		sub nlinha, 1
-		cmp nlinha, 0
-		je LER_SETA
-		jmp LER_PRETOS
-
-
-RESET:
-	
-        ;xor dx,dx
-		;xor ax,ax
-        mov aux, 0
-		mov al, aux  
-		mov aux2, 0
-		mov cl, nlinha
-		jmp CICLO_PUTAS
-
-
-CICLO_PUTAS:
-		
-  	
-		sub bx, ax
-		mov dl, vetor[bx] 
-		mov dh, vetor[bx-18]
-		mov dl, dh
-		mov vetor[bx], dl
-		mov vetor[bx+1], dl
-
-		add ax, 18
-		add aux2, 1 ;ciclo for
-		
-		cmp cl, aux2
-		je LER_PRETOS 
-		jmp CICLO_PUTAS
-
-
-;######################################################################################################	
-
 
 ESTEND:     
 		cmp  al,48h
