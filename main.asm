@@ -1225,13 +1225,15 @@ PUXA_COL:
 	cmp count,0
 	je COR_CIMA
 	
-	;call delay
+	
+	call delay
 	
 	
 	
 
 	mov dl, vetor[si-19]
 	mov dh, vetor[si-20]
+
 	mov vetor[si-2],dl
 	mov vetor[si-1],dh
 	
@@ -1242,9 +1244,14 @@ PUXA_COL:
 
 
 COR_CIMA:
+    call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
+        pop ax ;        ; Vai buscar 'a pilha o n�mero aleat�rio
+        and al,01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
+        cmp al, 0       ; Se o fundo de ecran � preto
+        je  COR_CIMA     ; vai buscar outra cor
 
-	mov vetor[si-2],1
-	mov vetor[si-1],1
+	mov vetor[si-2],al
+	mov vetor[si-1],al
 	jmp CICLOLIMPATABUL
 	
 
