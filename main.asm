@@ -14,7 +14,7 @@ fimTempo db 0
 
 
 
-		pontuacao db 0
+		pontuacao dw 0
 		pontuacao_total db 0
 	    Cor3        db  7 
     ; --- DADOS PRINCIPAIS ---
@@ -530,6 +530,7 @@ erro_ler:
 
 JogaCarregado:
 
+		mov  Segundos,60
 		call APAGA_ECRAN
 		call ImprimeVetor
 		call CICLO_CURSOR
@@ -773,23 +774,41 @@ CICLO_CURSOR:
         
 		;--- Retifica cor de fundo
 		mov cl, 4 ; PARA FAZER O ROR TEM DE SR COM CL
+	
 		ror ah, cl
 			
 		add ah, 48
-		mov Cor2, ah ; Guarda a cor que est� na posi��o do Cursor
+		
+		
+		;mov Cor2, ah ; Guarda a cor que est� na posi��o do Cursor
 		;--- Retifica cor de fundo
 		dec     POSx
        
        
-        goto_xy     77,0        ; Mostra o caractr que estava na posi��o do AVATAR
-        mov     ah, 02h         ; IMPRIME caracter da posi��o no canto
-        mov     dl, Car
-        int     21H        
+	;      goto_xy     0,0        ; Mostra o caractr que estava na posi��o do AVATAR
+	;      mov     ah, 02h         ; IMPRIME caracter da posi��o no canto
+ 	;      mov     dl, Car
+ 	;      int     21H        
        
-        goto_xy     78,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
+        goto_xy    01,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
         mov     ah, 02h     	; IMPRIME caracter2 da posição no canto
-        mov     dl, Cor2   
+        mov     dl, Cor2
         int     21H 
+		
+	
+	mov 	ax,pontuacao
+	MOV 	bl, 10     
+	div 	bl
+	add 	al, 30h				; Caracter Correspondente �s dezenas
+	add		ah,	30h				; Caracter Correspondente �s unidades
+	MOV 	STR12[0],al			; 
+	MOV 	STR12[1],ah
+	MOV 	STR12[2],'p'		
+	MOV 	STR12[3],'$'
+	GOTO_XY	0,4
+	MOSTRA	STR12 			
+		
+		goto_xy	POSy,POSx	
 
 
 		goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
