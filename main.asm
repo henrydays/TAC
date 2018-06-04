@@ -4,7 +4,16 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
+fimTempo db 0
+
+;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
 		editor db 0
+		usarEditado db 0
+;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
+
+
+
+
 		pontuacao db 0
 		pontuacao_total db 0
 	    Cor3        db  7 
@@ -12,10 +21,7 @@ DADOS   SEGMENT PARA 'DATA'
 		POSx_in db 4 ;posicao X dentro do tabul
 		POSy_in db 3 ;posicao Y dentro do tabul
 		vetor db 108 dup(0) 
-		flag_esq_dir db 0 ; se tiver pe�as iguais a esq ou dir = 1
-		flag_cim_baix db 0 ;se tiver pe�as iguais cima ou baixo = 1
-		ind_alvo db 0 ; indicie no vetor do alvo que foi escolhe
-		zona_tipo db 0,0 ; [tipo = 0 � h� explos�o, tipo=1 Horizontal, tipo=2 Vertical, tipo = 3 Estrela] [Indice em Bx do centro]
+		vetor1 db 108 dup(0)
 		nlinha db 5
 		aux db 0
 		aux2 db 0
@@ -36,7 +42,7 @@ DADOS   SEGMENT PARA 'DATA'
     ; --- !VARIAVEIS DO TABULEIRO ---
    
     ; --- VARIAVEIS DO CURSOR ---
-        string  db  "Teste pr�tico de T.I $"
+    
         Car     db  32  ; Guarda um caracter do Ecran
         Cor     db  7   ; Guarda os atributos de cor do caracter
         Car2        db  32  ; Guarda um caracter do Ecran
@@ -87,13 +93,21 @@ DADOS   SEGMENT PARA 'DATA'
 		db "																	     ",10,13
 		db "		Digite um numero... $											 ",10, 13
 				
-							
-				
-	SubMenu2    db      10, 13, 10, 13, "-------------------------------",0Dh,0Ah,0Dh,0Ah,09h
-				db      "1 - Geracao de Grelha de Forma Aleatoria",0Dh,0Ah,09h 
-				db      "2 - Carregar Grelha",0Dh,0Ah,09h     
-				db      10, 13, 10, 13, "-----------------------",0Dh,0Ah,0Dh,0Ah,09h
-				db      "Digite um numero: ",10, 13,10, 13,10, 13,10, 13			
+	MFim db " ",10,13
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "								FIM			     					     ",10,13
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "$",10,13
+																		   
+
+				db      " ",10, 13,10, 13,10, 13,10, 13			
   	; --- !VARIAVEIS DE MSG DO MENU ---	
 
 	; ---- VARIAVEIS MOSTRA VETOR ---
@@ -111,10 +125,25 @@ DADOS   SEGMENT PARA 'DATA'
 	;------TRATA_HORAS_JOGO E DATA_JOGO ---
 	
 	
-	
-	
+		
+	;~~~~~~~~FIcheiros~~~~~~~~~~~~~
+
+	fname	db	'pergunta.txt',0
+	fhandle dw	0
+
+	msgErrorCreate	db	"Ocorreu um erro na criacao do ficheiro!$"
+	msgErrorWrite	db	"Ocorreu um erro na escrita para ficheiro!$"
+	msgErrorClose	db	"Ocorreu um erro no fecho do ficheiro!$"	
 	
    
+
+        Erro_Open       db      'Erro ao tentar abrir o ficheiro$'
+        Erro_Ler_Msg    db      'Erro ao tentar ler do ficheiro$'
+        Erro_Close      db      'Erro ao tentar fechar o ficheiro$'
+        Fich         	db      'pergunta.TXT',0
+        HandleFich      dw      0
+        car_fich        db      ?
+
 DADOS   ENDS
  
 CODIGO  SEGMENT PARA 'CODE'
@@ -264,7 +293,8 @@ TRATA_HORAS_JOGO PROC
 	PUSH DX		
 
 	cmp 	segundos, 0
-	je 		FIM_HORAS
+	je 		MensagemFim
+
 	CALL 	LER_TEMPO_JOGO				; Horas MINUTOS e segundos do Sistema
 	
 	MOV		AX, contaSeg
@@ -275,11 +305,22 @@ TRATA_HORAS_JOGO PROC
 	dec Segundos
 	cmp Segundos, 0
 	jne CONTINUA
+Fim:
+
+MensagemFim:
+        lea     dx, MFim
+		mov     ah, 09h
+		int     21h
+ 		mov fimTempo,1
+		jmp FIM_HORAS
+
 
 	
 CONTINUA:
 	
-	
+	cmp Segundos,0
+	je MensagemFim
+
 	mov 	ax,Segundos
 	MOV 	bl, 10     
 	div 	bl
@@ -335,6 +376,7 @@ LER_TEMPO_JOGO   ENDP
 
 ;########################################################################	
 ImprimeVetor proc
+	
 	; ---- MOSTRA VETOR --- BrunoFilipe22/05/2018
 	xor si,si
 	xor di,di
@@ -392,8 +434,6 @@ PRINC PROC
 		goto_xy 0,0
 		
 
-		
-		
         ; ------LIMPAR ECRA ----
 		
 		call APAGA_ECRAN
@@ -415,11 +455,21 @@ PRINC PROC
 			
 			cmp al,51
 				je CONF_GRELH
-            cmp al,52
+            
+			cmp al,115
+			je GRAVA_FICH
+
+
+			cmp al,52
                 je fim
+
+			
 			
 			jmp CICLOMENU
+
 		MENUJOGAR: ; sub menu do desenho
+
+			mov fimTempo,0
 
 			call APAGA_ECRAN
 			lea     dx, MJogar
@@ -432,24 +482,115 @@ PRINC PROC
 			mov editor,0
 			cmp  al, 49 ; Se inserir 1
                 je Jogar
+
+			cmp  al, 50 ; Se inserir 1
+                je ABRE_BICH	
 			
+
             cmp al,52
                 je CICLOMENU
 			
 			jmp MENUJOGAR
-
-
+			
+			
 		FORA: 
 			CMP AL, 27 ; TECLA ESCAPE
 			JE fim;
 		
 	JMP CICLOMENU
+
+ABRE_BICH:
+        mov     ah,3dh			; vamos abrir ficheiro para leitura 
+        mov     al,0			; tipo de ficheiro	
+        lea     dx,Fich			; nome do ficheiro
+        int     21h			; abre para leitura 
+        jc      erro_abrir		; pode aconter erro a abrir o ficheiro 
+        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
+        jmp     ler_ciclo		; depois de abero vamos ler o ficheiro 
+ler_ciclo:
+        mov     ah,3fh			; indica que vai ser lido um ficheiro 
+        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
+        mov     cx,108			; numero de bytes a ler 
+        lea     dx,vetor		; vai ler para o local de memoria apontado por dx (car_fich)
+        int     21h				; faz efectivamente a leitura
+		jc	    erro_ler		; se carry � porque aconteceu um erro
+		cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
+		je	    fecha_ficheiro	; se EOF fecha o ficheiro 
+    
+		mov     ah,02h			; coloca o caracter no ecran
+	  ;mov	    dl,vetor	; este � o caracter a enviar para o ecran
+	 
+	  int	    21h				; imprime no ecran
+	  jmp	    ler_ciclo		; continua a ler o ficheiro
+
+erro_ler:
+        mov     ah,09h
+        lea     dx,Erro_Ler_Msg
+        int     21h
+
+JogaCarregado:
+
+		call APAGA_ECRAN
+		call ImprimeVetor
+		call CICLO_CURSOR
+
+
+
+fecha_ficheiro:					; vamos fechar o ficheiro 
+        mov     ah,3eh
+        mov     bx,HandleFich
+        int     21h
+        jnc     JogaCarregado
+
+        mov     ah,09h			; o ficheiro pode n�o fechar correctamente
+        lea     dx,Erro_Close
+        Int     21h
+erro_abrir:
+        mov     ah,09h
+        lea     dx,Erro_Open
+        int     21h
+        jmp     CICLOMENU
+
+GRAVA_FICH:
+		
+		
+		mov		ah, 3ch				; Abrir o ficheiro para escrita
+		mov		cx, 00H				; Define o tipo de ficheiro ??
+		lea		dx, fname			; DX aponta para o nome do ficheiro 
+		int		21h					; Abre efectivamente o ficheiro (AX fica com o Handle do ficheiro)
+		jnc		escreve				; Se não existir erro escreve no ficheiro
 	
+		mov		ah, 09h
+		lea		dx, msgErrorCreate
+		int		21h
 	
+		jmp		fim	
 	
+
+
+escreve:
+
+		mov		bx, ax				; Coloca em BX o Handle
+    	mov		ah, 40h				; indica que é para escrever
+    	
+		lea		dx, vetor			; DX aponta para a infromação a escrever
+    	mov		cx, 108					; CX fica com o numero de bytes a escrever
+		int		21h					; Chama a rotina de escrita
+		jnc		close				; Se não existir erro na escrita fecha o ficheiro
 	
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		mov		ah, 09h
+		lea		dx, msgErrorWrite
+		int		21h	
+
+close:
+		mov		ah,3eh				; fecha o ficheiro
+		int		21h
+		jnc		fim
 	
+		mov		ah, 09h
+		lea		dx, msgErrorClose
+		int		21h
+
 CONF_GRELH:
 
 		mov editor,1
@@ -471,16 +612,16 @@ jogar:
 		mov tamY,6
 
 
-   		  mov Segundos, 61 ; iniciou o jogo
-		 goto_xy  20,20
+   		mov Segundos, 10 ; iniciou o jogo
+		
+		goto_xy  20,20
 	
 
-
-	 
- 
 ; --- TABULEIRO ---
     mov cx,10       ; Faz o ciclo 10 vezes
-	xor si,si ;BrunoFilipe22/05/2018
+	xor si,si 
+
+
 ciclo4:
         call    CalcAleat
         pop ax      ; vai buscar 'a pilha o n�mero aleat�rio
@@ -592,10 +733,10 @@ novacor:
 CICLO_CURSOR:       
         
 	
-
+		
         goto_xy POSxa,POSya ; Vai para a posi��o anterior do cursor
 
-	
+
 
         mov     ah, 02h
         mov     dl, Car ; Repoe Caracter guardado
@@ -651,7 +792,7 @@ CICLO_CURSOR:
         int     21H 
 
 
-		goto_xy     60,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
+		goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
 		mov al, 48
 		add al, POSx_in
         mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
@@ -699,7 +840,10 @@ IMPRIME:
    
 LER_SETA:
    
-	
+		cmp fimTempo,1
+
+		je MENUJOGAR
+		
 		call	ImprimeVetor
 		call        LE_TECLA
 
@@ -708,7 +852,7 @@ LER_SETA:
         je      ESTEND
      
         
-       	cmp AL,113
+       	cmp AL,52   
 		je CICLOMENU
 	
  
@@ -774,6 +918,7 @@ METECOR:
         and al,01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
         cmp al, 0       ; Se o fundo de ecran � preto
 		je METECOR
+		
 		mov vetor[bx],al
 		mov vetor[bx+1],al
 	
@@ -933,7 +1078,7 @@ EXPLODE_ESQ_B:
 
 LER_PRETOS:
 		
-		
+	
         xor bx,bx
         mov ax, 18
 		mov cl, nlinha
@@ -965,6 +1110,7 @@ LER_PRETOS:
 
 
 RESET:
+	
         ;xor dx,dx
 		;xor ax,ax
         mov aux, 0
@@ -976,7 +1122,7 @@ RESET:
 
 CICLO_PUTAS:
 		
-
+  	
 		sub bx, ax
 		mov dl, vetor[bx] 
 		mov dh, vetor[bx-18]

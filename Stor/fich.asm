@@ -18,7 +18,7 @@ dseg	segment para public 'data'
         Erro_Open       db      'Erro ao tentar abrir o ficheiro$'
         Erro_Ler_Msg    db      'Erro ao tentar ler do ficheiro$'
         Erro_Close      db      'Erro ao tentar fechar o ficheiro$'
-        Fich         	db      'ABC.TXT',0
+        Fich         	db      '.TXT',0
         HandleFich      dw      0
         car_fich        db      ?
 	
@@ -80,11 +80,11 @@ ler_ciclo:
         mov     cx,1			; numero de bytes a ler 
         lea     dx,car_fich		; vai ler para o local de memoria apontado por dx (car_fich)
         int     21h				; faz efectivamente a leitura
-	jc	    erro_ler		; se carry é porque aconteceu um erro
-	cmp	    ax,0			;EOF?	verifica se já estamos no fim do ficheiro 
+	jc	    erro_ler		; se carry ï¿½ porque aconteceu um erro
+	cmp	    ax,0			;EOF?	verifica se jï¿½ estamos no fim do ficheiro 
 	je	    fecha_ficheiro	; se EOF fecha o ficheiro 
         mov     ah,02h			; coloca o caracter no ecran
-	  mov	    dl,car_fich		; este é o caracter a enviar para o ecran
+	  mov	    dl,car_fich		; este ï¿½ o caracter a enviar para o ecran
 	  int	    21h				; imprime no ecran
 	  jmp	    ler_ciclo		; continua a ler o ficheiro
 
@@ -99,7 +99,7 @@ fecha_ficheiro:					; vamos fechar o ficheiro
         int     21h
         jnc     sai
 
-        mov     ah,09h			; o ficheiro pode não fechar correctamente
+        mov     ah,09h			; o ficheiro pode nï¿½o fechar correctamente
         lea     dx,Erro_Close
         Int     21h
 sai:	  RET
