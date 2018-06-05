@@ -205,7 +205,8 @@ CODIGO  SEGMENT PARA 'CODE'
         add ax,dx
         mov si,ax
  
-    ciclo:  mov ah,2Ch
+    ciclo:  
+	    mov ah,2Ch
         int 21h
         mov al,100
         mul dh
@@ -214,7 +215,8 @@ CODIGO  SEGMENT PARA 'CODE'
  
         cmp ax,si
         jnb naoajusta
-        add ax,6000 ; 60 segundos
+        add ax, 6000 ; 60 segundos
+
     naoajusta:
         sub ax,si
         cmp ax,di
@@ -691,7 +693,7 @@ novacor:
 	    mov cl,ah
 ;--------- Copiar para o vetor------------------------		
 		
-        mov di,1 ;delay de 1 centesimo de segundo
+        mov di, 1      ;delay de 1 centesimo de segundo
         call    delay
         loop    ciclo       ; continua at� fazer as 9 colunas que correspondem a uma liha completa
        
@@ -960,10 +962,6 @@ EXPLODE_DIR_F:
 
 		goto_xy     50,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
 	
-
-	
-
-		
 		mov al ,vetor[bx]
 
 		cmp vetor[bx+2],al
@@ -979,7 +977,6 @@ EXPLODE_DIR_F:
 		mov vetor[bx+2],0
 		
 		mov vetor[bx+3],0
-
 		
 
 		inc pontuacao
@@ -987,14 +984,13 @@ EXPLODE_DIR_F:
 		
 		jmp EXPLODE_DIR_T
 
+
 EXPLODE_DIR_T:
 
 
 		;mov al ,vetor[bx] 
 		
-	
-		
-		
+
 		cmp vetor[bx-15],al
 		
 		jne EXPLODE_DIR_B
@@ -1107,7 +1103,6 @@ EXPLODE_ESQ_T:
 EXPLODE_ESQ_F:
 
 	;	mov al,vetor[bx]
-		
 		cmp vetor[bx-2],al
 		jne EXPLODE_ESQ_B
 		
@@ -1116,23 +1111,22 @@ EXPLODE_ESQ_F:
 
 	    mov vetor[bx],0
 		mov vetor[bx+1],0
+		
 
 		mov vetor[bx-2],0
-		
 		mov vetor[bx-1],0
+
 		inc pontuacao
 		mov explodiuMeio,1
 
 		jmp EXPLODE_ESQ_B
 
 EXPLODE_ESQ_B:
-
 		mov indiceVetor, 108
 	;	mov al,vetor[bx]
 	    mov nlinha,5
 
 		cmp vetor[bx+17],al
-
 		jne CICLOLIMPATABUL
 		cmp POSx_in, 0
 		je CICLOLIMPATABUL
@@ -1147,6 +1141,7 @@ EXPLODE_ESQ_B:
 		
 		inc pontuacao
 		mov explodiuMeio,1
+		
 
 		jmp CICLOLIMPATABUL
 		
@@ -1199,19 +1194,17 @@ DIREITA:
 
 
 CICLOLIMPATABUL:
-
+    
 	cmp indiceVetor,0
-
 	je LER_SETA
 
 	mov cl, POSy_in
 	mov count,cl
 
 	mov bx, indiceVetor
-	mov si,bx
-	
-	cmp vetor[bx-1],0
 
+	cmp vetor[bx-1],0
+	PUSH bx
 	je PUXA_COL	
 	
 	dec indiceVetor
@@ -1219,39 +1212,38 @@ CICLOLIMPATABUL:
 	
 	jmp CICLOLIMPATABUL
 
-PUXA_COL:
-	
 
+PUXA_COL:
+	xor dx,dx
 	cmp count,0
 	je COR_CIMA
-	
-	
-	call delay
-	
-	
-	
 
-	mov dl, vetor[si-19]
-	mov dh, vetor[si-20]
 
-	mov vetor[si-2],dl
-	mov vetor[si-1],dh
+	mov dl, vetor[bx-19]
+	mov dh, vetor[bx-20]
+	mov vetor[bx-2],dl
+	mov vetor[bx-1],dh
 	
 	dec count
 	
-	sub si,18
+	sub bx,18
 	jmp PUXA_COL
 
 
 COR_CIMA:
-    call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
+
+        call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
         pop ax ;        ; Vai buscar 'a pilha o n�mero aleat�rio
-        and al,01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
+        and al, 01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
         cmp al, 0       ; Se o fundo de ecran � preto
         je  COR_CIMA     ; vai buscar outra cor
 
-	mov vetor[si-2],al
-	mov vetor[si-1],al
+    
+	mov vetor[bx-1], al
+	mov vetor[bx-2], al
+	POP bx
+	
+	
 	jmp CICLOLIMPATABUL
 	
 
