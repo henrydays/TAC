@@ -991,15 +991,13 @@ EXPLODE_DIR_T:
 
 
 		;mov al ,vetor[bx] 
-		
-	
-		
-		
+			
 		cmp vetor[bx-15],al
 		
 		jne EXPLODE_DIR_B
 		
 		cmp POSx_in,8
+		
 		je EXPLODE_DIR_B
 
 		mov vetor[bx],0
