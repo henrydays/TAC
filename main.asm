@@ -989,12 +989,7 @@ EXPLODE_DIR_T:
 
 
 		;mov al ,vetor[bx] 
-<<<<<<< HEAD
-		
 
-=======
-			
->>>>>>> 1fa67f142f47991369935d07df3a97c02a1b6d2a
 		cmp vetor[bx-15],al
 		
 		jne EXPLODE_DIR_B
