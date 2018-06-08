@@ -4,18 +4,22 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
-posTOP db 1
-indicePontos dw 0
+	posXtop db 0
+	posYtop db 0
+
+
+	posTOP db 1
+	indicePontos dw 0
 
 	indiceVetor dw 0
 	count db 0
 
-fimTempo db 0
+	fimTempo db 0
 		
 
 vetorTEMPOS dw 10 dup (0)
-vetorPONTOS dw   9,8,7,6,5,2,3,2,1
-vetorNOMES  db   dup(10 dup(10 dup(?)))
+vetorPONTOS dw   9,8,7,6,5,2,3,2,1,0,4
+vetorNOMES  db   'Jogador001Jsgador002Jtgador003Jogador004Jogador005Jogador006Jogador007Jogador008Jogador009Jogador010,Jogador011'
 
 
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
@@ -281,6 +285,7 @@ PRINT_NUMERO MACRO Num
 	add		ah,	30h				; Caracter Correspondente �s unidades
 	MOV 	STR12[0],al			; 
 	MOV 	STR12[1],ah	
+	MOV Str12[2],0
 	MOV 	STR12[3],'$'
 	MOSTRA	STR12 			
 	
@@ -1303,9 +1308,9 @@ TOP_10:
 			mov     ah, 09h
 			int     21h
 			
-				mov POSx,10
+				mov posXtop,10
 				
-				mov POSy,10
+				mov posYtop,10
 			xor bx,bx
 
 			mov indicePontos ,0
@@ -1315,6 +1320,9 @@ TOP_10:
 		
 ; imprime no ecra os pontos
 
+
+
+
 PrintJogadores:
 
 	mov posTOP,1
@@ -1323,7 +1331,26 @@ PrintJogadores:
 
 	jne PRINT_LINHA
 
+	;;atualizar a lista
+	mov cx,10
+	xor si,si
+	xor bx,bx
+	mov bx, 10
 
+	atualizaTOP:
+	
+		inc si 
+		mov dx, vetorPONTOS[si-1]
+		cmp vetorPONTOS[bx], dx
+		jna atualizaTOP
+		
+		mov ax, vetorPONTOS[bx]
+		mov vetorPONTOS[bx],dx
+		mov vetorPONTOS[si-1],ax
+
+		loop atualizaTOP
+	
+	
 	mov  ah, 07h ; Esperar que o utilizador insira um caracter
     int  21h
 			
@@ -1335,43 +1362,54 @@ PrintJogadores:
 
 PRINT_LINHA:
 	
-	goto_xy POSx,POSy
+	goto_xy posXtop,posYtop
 
 	cmp indicePontos, 10
 	
 	je PrintJogadores
 	
-	GOTO_XY	10,POSy
+	GOTO_XY	10,posYtop
 
 	mov cl ,posTOP
 	PRINT_NUMERO cx
 	
-	
-	GOTO_XY	25,POSy
+	mov posXtop, 25
+	GOTO_XY	posXtop,posYtop
 	
 	PRINT_NUMERO vetorPONTOS[bx]	
+	
+	mov posXtop, 40
 
-	GOTO_XY 40,POSy
+	GOTO_XY posXtop,posYtop
 	
 	PRINT_NUMERO vetorTEMPOS[bx]	
 	
-	GOTO_XY 45,POSy
-
-	PRINT_CAR 43
-	add POSy,1
+	mov posXtop, 58
+	GOTO_XY posXtop,posYtop
 	
-	inc posTOP
+	mov cx,10
+	mov si,0
 
+	mov ax,indicePontos
+	
+	mul cx
+
+	mov si, ax
+
+	;Nome atual
+	
+	PRINT_NOME:
+		
+	PRINT_CAR vetorNOMES[si]
+	inc si
+	loop PRINT_NOME
+	add posYtop,1
+	inc posTOP
 	inc bx
 	inc bx
 	inc indicePontos
 	
-	
-	
-
 	jmp PRINT_LINHA
-
-
 
 Teste:
  
