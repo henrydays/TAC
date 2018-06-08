@@ -59,7 +59,7 @@ fimTempo db 0
 		
 	; --- VARIAVEIS DE MSG DO MENU ---	
 
-Menu    db "         																 ",10,13   
+	Menu db " ",10,13   
 		db "																	     ",10,13
 		db "  	 _______ _______ __   __   _______ ___     _______ _______ _______   ",10,13
 		db "   	|       |       |  | |  | |  _    |   |   |   _   |       |       |  ",10,13
@@ -74,7 +74,7 @@ Menu    db "         																 ",10,13
 		db "		2 - Ver Pontuacoes											     ",10,13 
 		db "		3 - Configuracao da Grelha									     ",10,13
 		db "		4 - Sair													     ",10,13
-		db "		Digite um numero... $											 ",10,13
+		db "		Digite um numero... $											 ",10, 13
 				
 				
 	MJogar db " ",10,13   
@@ -1034,12 +1034,9 @@ EXPLODE_DIR_B:
 
 		jmp EXPLODE_CIM
 
-
-
-
 EXPLODE_CIM:
 		
-    	;mov al,vetor[bx]
+    ;	mov al,vetor[bx]
 		
 		cmp vetor[bx-18],al
 		
@@ -1200,13 +1197,12 @@ CICLOLIMPATABUL:
 	cmp indiceVetor,0
 	je LER_SETA
 
-
 	mov cl, POSy_in
 	mov count,cl
 
 	mov bx, indiceVetor
 
-	cmp vetor[bx-2],0
+	cmp vetor[bx-1],0
 	PUSH bx
 	je PUXA_COL	
 	
@@ -1217,7 +1213,6 @@ CICLOLIMPATABUL:
 
 
 PUXA_COL:
-	
 	xor dx,dx
 	cmp count,0
 	je COR_CIMA
@@ -1227,23 +1222,24 @@ PUXA_COL:
 	mov dh, vetor[bx-20]
 	mov vetor[bx-2],dl
 	mov vetor[bx-1],dh
+	
 	dec count
 	
 	sub bx,18
 	jmp PUXA_COL
 
+
 COR_CIMA:
 
-    call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
-    pop ax ;           ; Vai buscar 'a pilha o n�mero aleat�rio
-    and al, 01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
+        call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
+        pop ax ;        ; Vai buscar 'a pilha o n�mero aleat�rio
+        and al, 01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
+        cmp al, 0       ; Se o fundo de ecran � preto
+        je  COR_CIMA     ; vai buscar outra cor
 
-	
-	
-	
-
-	mov vetor[bx-1],  al
-	mov vetor[bx-2],  al
+    
+	mov vetor[bx-1], al
+	mov vetor[bx-2], al
 	POP bx
 	
 	
