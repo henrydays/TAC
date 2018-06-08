@@ -4,14 +4,25 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
+posTOP db 1
+indicePontos dw 0
+
 	indiceVetor dw 0
 	count db 0
 
 fimTempo db 0
+		
+
+vetorTEMPOS dw 10 dup (0)
+vetorPONTOS dw   9,8,7,6,5,2,3,2,1
+vetorNOMES  db   dup(10 dup(10 dup(?)))
+
 
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
+	
 		editor db 0
 		usarEditado db 0
+
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
 
 
@@ -93,8 +104,19 @@ fimTempo db 0
 		db "																	     ",10,13
 		db "		4 - Voltar													     ",10,13
 		db "																	     ",10,13
-		db "		Digite um numero... $											 ",10, 13
+		db "		Digite um numero... $											 ",10,13
 				
+
+TOP10 db" ",10,13  
+		db "								    ",10,13 
+		db "		         ______   ___  ____  	 _   ___   ",10,13  
+		db " 			|_   _|  / _ \ | _ \   / (_ /   \ ",10,13  
+		db "   			  | |   | (_) ||  _/   | | | () |   ",10,13  
+		db "   			  |_|    \___/ |_|     |_|  \__/ ",10,13    
+		db "													   ",10,13	
+		db " 	POSICAO        PONTOS        TEMPO(seg)              NOME         ",10,13
+		db "$",10,13			                                		
+															 	
 	MFim db " ",10,13
 	db "																	     ",10,13
 	db "																	     ",10,13
@@ -248,7 +270,29 @@ MOSTRA MACRO STR
 	LEA DX,STR 
 	INT 21H
 ENDM
-   
+
+
+PRINT_NUMERO MACRO Num
+	
+	mov 	ax,num
+	MOV 	cl, 10     
+	div 	cl
+	add 	al, 30h				; Caracter Correspondente �s dezenas
+	add		ah,	30h				; Caracter Correspondente �s unidades
+	MOV 	STR12[0],al			; 
+	MOV 	STR12[1],ah	
+	MOV 	STR12[3],'$'
+	MOSTRA	STR12 			
+	
+ENDM
+
+PRINT_CAR MACRO car
+	
+	mov ah,02H
+	mov dl,car
+	int 21H
+
+ENDM
     ;ROTINA PARA APAGAR ECRAN
     apaga_ecran proc
             xor     bx,bx
@@ -378,10 +422,10 @@ LER_TEMPO_JOGO PROC
 LER_TEMPO_JOGO   ENDP 
 
 
-;########################################################################	
+;Procedimento para mostrar vetor
 ImprimeVetor proc
 	
-	; ---- MOSTRA VETOR --- BrunoFilipe22/05/2018
+	; ---- MOSTRA VETOR --- 
 	xor si,si
 	xor di,di
 	xor bx, bx
@@ -457,6 +501,9 @@ PRINC PROC
 			cmp  al, 49 ; Se inserir 1
               je MENUJOGAR
 			
+			cmp al ,50 ; Se primir  2
+				je TOP_10
+
 			cmp al,51
 				je CONF_GRELH
             
@@ -507,10 +554,11 @@ ABRE_BICH:
         mov     ah,3dh			; vamos abrir ficheiro para leitura 
         mov     al,0			; tipo de ficheiro	
         lea     dx,Fich			; nome do ficheiro
-        int     21h			; abre para leitura 
+        int     21h			    ; abre para leitura 
         jc      erro_abrir		; pode aconter erro a abrir o ficheiro 
         mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
         jmp     ler_ciclo		; depois de abero vamos ler o ficheiro 
+
 ler_ciclo:
         mov     ah,3fh			; indica que vai ser lido um ficheiro 
         mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
@@ -1244,6 +1292,84 @@ COR_CIMA:
 	
 	
 	jmp CICLOLIMPATABUL
+
+TOP_10:	
+			
+			call APAGA_ECRAN
+			
+			goto_xy 0,0
+		
+			lea     dx, TOP10
+			mov     ah, 09h
+			int     21h
+			
+				mov POSx,10
+				
+				mov POSy,10
+			xor bx,bx
+
+			mov indicePontos ,0
+
+			jmp PrintJogadores	
+			
+		
+; imprime no ecra os pontos
+
+PrintJogadores:
+
+	mov posTOP,1
+
+	cmp indicePontos,10
+
+	jne PRINT_LINHA
+
+
+	mov  ah, 07h ; Esperar que o utilizador insira um caracter
+    int  21h
+			
+			
+			cmp  al, 52 ; Se inserir 2
+                je CICLOMENU
+
+	
+
+PRINT_LINHA:
+	
+	goto_xy POSx,POSy
+
+	cmp indicePontos, 10
+	
+	je PrintJogadores
+	
+	GOTO_XY	10,POSy
+
+	mov cl ,posTOP
+	PRINT_NUMERO cx
+	
+	
+	GOTO_XY	25,POSy
+	
+	PRINT_NUMERO vetorPONTOS[bx]	
+
+	GOTO_XY 40,POSy
+	
+	PRINT_NUMERO vetorTEMPOS[bx]	
+	
+	GOTO_XY 45,POSy
+
+	PRINT_CAR 43
+	add POSy,1
+	
+	inc posTOP
+
+	inc bx
+	inc bx
+	inc indicePontos
+	
+	
+	
+
+	jmp PRINT_LINHA
 
 
 
