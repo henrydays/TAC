@@ -45,7 +45,6 @@ fimTempo db 0
     ; --- !VARIAVEIS DO TABULEIRO ---
    
     ; --- VARIAVEIS DO CURSOR ---
-    
         Car     db  32  ; Guarda um caracter do Ecran
         Cor     db  7   ; Guarda os atributos de cor do caracter
         Car2        db  32  ; Guarda um caracter do Ecran
@@ -1245,7 +1244,8 @@ COR_CIMA:
 	
 	
 	jmp CICLOLIMPATABUL
-	
+
+
 
 Teste:
  
