@@ -4,6 +4,11 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
+
+	tmpPontos db 0
+	tmpTempos db 0
+	tmpSI db 0
+
 	posXtop db 0
 	posYtop db 0
 
@@ -17,9 +22,9 @@ DADOS   SEGMENT PARA 'DATA'
 	fimTempo db 0
 		
 
-vetorTEMPOS dw 10 dup (0)
-vetorPONTOS dw   9,8,7,6,5,2,3,2,1,0,4
-vetorNOMES  db   'Jogador001Jsgador002Jtgador003Jogador004Jogador005Jogador006Jogador007Jogador008Jogador009Jogador010,Jogador011'
+	vetorTEMPOS db   57,56,55,54,53,52,51,50,49,48,99	
+	vetorPONTOS db   27,2,0,0,0,0,0,0,0,0,1
+	vetorNOMES  db   'Jogador001Jogador002Jogador003Jogador004Jogador005Jogador006Jogador007Jogador008Jogador009Jogador010,putamadre9'
 
 
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
@@ -275,10 +280,25 @@ MOSTRA MACRO STR
 	INT 21H
 ENDM
 
+mostra_pont MACRO  pont
+mov 	ax,pontuacao
+	MOV 	bl, 10     
+	div 	bl
+	add 	al, 30h				; Caracter Correspondente �s dezenas
+	add		ah,	30h				; Caracter Correspondente �s unidades
+	MOV 	STR12[0],al			; 
+	MOV 	STR12[1],ah
+	MOV 	STR12[2],'p'		
+	MOV 	STR12[3],'$'
+	GOTO_XY	0,4
+	MOSTRA	STR12 			
+		
+ENDM	
 
 PRINT_NUMERO MACRO Num
 	
-	mov 	ax,num
+	xor ax,ax
+	mov 	al,num
 	MOV 	cl, 10     
 	div 	cl
 	add 	al, 30h				; Caracter Correspondente �s dezenas
@@ -853,19 +873,7 @@ CICLO_CURSOR:
         int     21H 
 		
 	
-	mov 	ax,pontuacao
-	MOV 	bl, 10     
-	div 	bl
-	add 	al, 30h				; Caracter Correspondente �s dezenas
-	add		ah,	30h				; Caracter Correspondente �s unidades
-	MOV 	STR12[0],al			; 
-	MOV 	STR12[1],ah
-	MOV 	STR12[2],'p'		
-	MOV 	STR12[3],'$'
-	GOTO_XY	0,4
-	MOSTRA	STR12 			
-		
-		
+		mostra_pont pontuacao
 
 
 		goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
@@ -1325,32 +1333,101 @@ TOP_10:
 
 PrintJogadores:
 
+
+	;atualizar a lista
+	mov cx,10
+
+	xor bx,bx
+	xor dx,dx
+	mov si,0
+	
+	
+	mov bx,10
+	xor ax,ax
+
+	mov dl ,vetorPONTOS[bx]
+	mov tmpPontos,dl
+
+	mov al,vetorTEMPOS[bx]
+	mov tmpTempos,al
+	
+
+	atualizaTOP:
+		
+		inc si
+
+		mov dl, tmpPontos
+		mov al, tmpTempos
+
+		cmp vetorPONTOS[si-1],dl	
+		
+		ja atualizaTOP
+	
+			mov dh, vetorPONTOS[si-1]
+			mov ah,vetorTEMPOS[si-1]
+			mov vetorPONTOS[si-1],dl
+			mov vetorTEMPOS[si-1],al		
+			mov tmpPontos,dh
+			mov tmpTempos,ah
+
+			;;trocar nomes 
+			push cx
+			mov cx,10
+			
+
+				
+				mov ax,si
+			mov tmpSI,al
+			dec si
+			   
+			mov ax,10
+			mul si
+			mov si,ax
+			mov bx,100
+			inc bx
+
+			trocaCar:
+
+				mov dl, vetorNOMES[bx]
+				
+				mov dh , vetorNOMES[si]
+
+				mov vetorNOMES[bx],dh
+
+				mov vetorNOMES[si],dl
+
+				inc bx
+				
+				inc si
+				
+
+				loop trocaCar
+				
+				pop cx
+		     	inc si
+				inc bx
+				mov al,tmpSI
+				mov si, ax
+
+		loop atualizaTOP
+
+
+
+	
+
+	xor ax,ax
+	xor bx,bx
+
 	mov posTOP,1
+
+xor bx,bx
+xor si,si
 
 	cmp indicePontos,10
 
 	jne PRINT_LINHA
 
-	;;atualizar a lista
-	mov cx,10
-	xor si,si
-	xor bx,bx
-	mov bx, 10
 
-	atualizaTOP:
-	
-		inc si 
-		mov dx, vetorPONTOS[si-1]
-		cmp vetorPONTOS[bx], dx
-		jna atualizaTOP
-		
-		mov ax, vetorPONTOS[bx]
-		mov vetorPONTOS[bx],dx
-		mov vetorPONTOS[si-1],ax
-
-		loop atualizaTOP
-	
-	
 	mov  ah, 07h ; Esperar que o utilizador insira um caracter
     int  21h
 			
@@ -1371,7 +1448,7 @@ PRINT_LINHA:
 	GOTO_XY	10,posYtop
 
 	mov cl ,posTOP
-	PRINT_NUMERO cx
+	PRINT_NUMERO cl
 	
 	mov posXtop, 25
 	GOTO_XY	posXtop,posYtop
@@ -1398,15 +1475,19 @@ PRINT_LINHA:
 
 	;Nome atual
 	
-	PRINT_NOME:
+		PRINT_NOME:
 		
-	PRINT_CAR vetorNOMES[si]
-	inc si
-	loop PRINT_NOME
+		PRINT_CAR vetorNOMES[si]
+		
+		inc si
+		
+
+		loop PRINT_NOME
+
 	add posYtop,1
 	inc posTOP
 	inc bx
-	inc bx
+
 	inc indicePontos
 	
 	jmp PRINT_LINHA
