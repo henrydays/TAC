@@ -125,7 +125,27 @@ TOP10 db" ",10,13
 		db "													   ",10,13	
 		db " 	POSICAO        PONTOS        TEMPO(seg)              NOME         ",10,13
 		db "$",10,13			                                		
-															 	
+
+
+	Jogo db " ",10,13
+
+ 	db "  			",10,13
+	db "     TEMPO RESTANTE:					         ",10,13
+	db "  ",10,13
+	db "     PONTUACAO:									      				 ",10,13
+	db "			    		 												 ",10,13
+	db "			   		  						   						  	 ",10,13
+	
+	db "																	     ",10,13
+	db "																	     ",10,13
+		db "		 													   			 ",10,13
+			db "		 													   			 ",10,13
+	db "																	     ",10,13
+	db "________________________________________________________________________________ ",10,13
+	db "		A explosao das pecas com simbolos duplica os pontos			     ",10,13
+
+	db "$",10,13
+	
 	MFim db " ",10,13
 	db "																	     ",10,13
 	db "																	     ",10,13
@@ -281,16 +301,19 @@ MOSTRA MACRO STR
 ENDM
 
 mostra_pont MACRO  pont
-mov 	ax,pontuacao
+	
+	mov 	ax,pontuacao
 	MOV 	bl, 10     
 	div 	bl
 	add 	al, 30h				; Caracter Correspondente �s dezenas
 	add		ah,	30h				; Caracter Correspondente �s unidades
 	MOV 	STR12[0],al			; 
 	MOV 	STR12[1],ah
-	MOV 	STR12[2],'p'		
+	MOV 	STR12[2],0	
 	MOV 	STR12[3],'$'
-	GOTO_XY	0,4
+	
+	GOTO_XY	22,4 ; posiçao ond evai ser imprimida a pontuação
+
 	MOSTRA	STR12 			
 		
 ENDM	
@@ -403,7 +426,7 @@ CONTINUA:
 	MOV 	STR12[1],ah
 	MOV 	STR12[2],'s'		
 	MOV 	STR12[3],'$'
-	GOTO_XY	75,4
+	GOTO_XY	22,2
 	MOSTRA	STR12 			
 		
 		goto_xy	POSy,POSx			; Volta a colocar o cursor onde estava antes de actualizar as horas
@@ -548,6 +571,7 @@ PRINC PROC
 			mov fimTempo,0
 
 			call APAGA_ECRAN
+
 			lea     dx, MJogar
 			mov     ah, 09h
 			int     21h
@@ -682,7 +706,9 @@ jogar:
 		MOV		ES,AX
 		call APAGA_ECRAN
 ; ------ !LIMPAR ECRA ----
- 
+ 	lea     dx, jogo
+			mov     ah, 09h
+			int     21h
 		
 		mov iniX, 60
 		mov iniY,8
@@ -866,29 +892,26 @@ CICLO_CURSOR:
 	;      mov     ah, 02h         ; IMPRIME caracter da posi��o no canto
  	;      mov     dl, Car
  	;      int     21H        
-       
-        goto_xy    01,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
-        mov     ah, 02h     	; IMPRIME caracter2 da posição no canto
-        mov     dl, Cor2
-        int     21H 
+   
+
 		
-	
+		
 		mostra_pont pontuacao
 
 
-		goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
-		mov al, 48
-		add al, POSx_in
-        mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
-        mov     dl, al   
-        int     21H 
+		;goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
+		;mov al, 48
+		;add al, POSx_in
+        ;mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
+        ;mov     dl, al   
+        ;int     21H 
 		
-		goto_xy     61,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
-		mov al, 48
-		add al, POSy_in
-        mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
-        mov     dl, al   
-        int     21H 
+		;goto_xy     61,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
+		;mov al, 48
+		;add al, POSy_in
+       ; mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
+       ; mov     dl, al   
+       ; int     21H 
     
         goto_xy     POSx,POSy   ;Vai para posi��o do cursor
 
@@ -1415,13 +1438,13 @@ PrintJogadores:
 
 	
 
-	xor ax,ax
-	xor bx,bx
+
 
 	mov posTOP,1
 
-xor bx,bx
-xor si,si
+	xor bx,bx
+	xor si,si
+	
 
 	cmp indicePontos,10
 
