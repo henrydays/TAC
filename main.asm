@@ -5,6 +5,8 @@
 DADOS   SEGMENT PARA 'DATA'
 
 
+	nomeTMP db 10 
+
 	tmpPontos db 0
 	tmpTempos db 0
 	tmpSI db 0
@@ -148,13 +150,16 @@ TOP10 db" ",10,13
 	
 	MFim db " ",10,13
 	db "																	     ",10,13
-	db "																	     ",10,13
-	db "																	     ",10,13
-	db "								FIM			     					     ",10,13
-	db "																	     ",10,13
-	db "																	     ",10,13
-	db "																	     ",10,13
-	db "																	     ",10,13
+	db "		______ ________  ___  _____ ________  ________ _____ ",10,13
+	db "		|  ___|_   _|  \/  | |_   _|  ___|  \/  | ___ \  _  |",10,13
+	db "		| |_    | | | .  . |   | | | |__ | .  . | |_/ / | | |",10,13
+	db "		|  _|   | | | |\/| |   | | |  __|| |\/| |  __/| | | |",10,13
+	db "		| |    _| |_| |  | |   | | | |___| |  | | |   \ \_/ /",10,13
+	db "		\_|    \___/\_|  |_/   \_/ \____/\_|  |_|_|    \___/ ",10,13
+ 	db "																	     ",10,13                                                                                
+	db "			PONTUACAO:													 ",10,13
+	db "																		 ",10,13
+	db "  											     					     ",10,13
 	db "																	     ",10,13
 	db "																	     ",10,13
 	db "$",10,13
@@ -401,12 +406,10 @@ TRATA_HORAS_JOGO PROC
 	dec Segundos
 	cmp Segundos, 0
 	jne CONTINUA
-Fim:
+
 
 MensagemFim:
-        lea     dx, MFim
-		mov     ah, 09h
-		int     21h
+
  		mov fimTempo,1
 		jmp FIM_HORAS
 
@@ -716,7 +719,7 @@ jogar:
 		mov tamY,6
 
 		mov pontuacao,0
-   		mov Segundos, 60 ; iniciou o jogo
+   		mov Segundos, 5 ; iniciou o jogo
 		
 		goto_xy  20,20
 	
@@ -949,7 +952,7 @@ LER_SETA:
 	
 		cmp fimTempo,1
 
-		je MENUJOGAR
+		je GAMEOVER
 		
 		call	ImprimeVetor
 		call        LE_TECLA
@@ -1520,6 +1523,21 @@ Teste:
     jmp CICLO_CURSOR
  
  
+GAMEOVER:
+
+		call APAGA_ECRAN
+  		lea     dx, MFim
+	
+		mov ah, 09h
+		int 21h
+
+		mov ah, 07h
+		int 21h
+
+		cmp al, 49
+		je CICLOMENU
+
+		jmp GAMEOVER
 FIM:
 
     MOV AH,4Ch
