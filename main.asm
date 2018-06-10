@@ -50,6 +50,9 @@ DADOS   SEGMENT PARA 'DATA'
 		nlinha db 5
 		aux db 0
 		aux2 db 0
+		plus db '+'
+		minus db '-'
+		bonus db 0
     ; --- !DADOS PRINCIPAIS ---
    
     ; --- DADOS INICIAIS ---
@@ -519,6 +522,15 @@ ImprimeVetor proc
 		
 		mov coluna_v,0
 		mov linha_v,0
+
+		mov al, plus
+		mov ah, minus
+	    mov bx, 1360
+        mov es:[bx], al  ;primeiro mais
+		mov es:[bx+172], al  ;segundo
+		mov es:[bx+310], ah  
+		mov es:[bx+642], al  
+		mov es:[bx+790], ah
 ; ---- !MOSTRA VETOR ---		
 	SAI:  RET
 ImprimeVetor endp  
@@ -1102,8 +1114,8 @@ METECOR:
 EXPLODE_DIR_F:
 
 		goto_xy     50,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
-	
-		mov al ,vetor[bx]
+        mov bonus, 0
+		mov al, vetor[bx]
 
 		cmp vetor[bx+2],al
 		jne EXPLODE_DIR_T
@@ -1112,117 +1124,98 @@ EXPLODE_DIR_F:
 		je EXPLODE_DIR_T
 
 		mov vetor[bx],0
-		
 		mov vetor[bx+1],0
 
 		mov vetor[bx+2],0
-		
 		mov vetor[bx+3],0
-		
-
+		inc bonus
 		inc pontuacao
 		mov explodiuMeio,1
-		
+
+		;mov dl, vetor[bx]
+		;cmp vetor[si+10], dl
+		;mov dl, vetor[si+34]
+		;mov dl, vetor[si+82]
+		;mov dl, vetor[si+40]
+		;mov dl, vetor[si+94]
 		jmp EXPLODE_DIR_T
 
 
 EXPLODE_DIR_T:
 
-
-		;mov al ,vetor[bx] 
-
 		cmp vetor[bx-15],al
-		
 		jne EXPLODE_DIR_B
 		
 		cmp POSx_in,8
-		
 		je EXPLODE_DIR_B
 
 		mov vetor[bx],0
-		
 		mov vetor[bx+1],0
 
 		mov vetor[bx-15],0
-	
 		mov vetor[bx-16],0
-	
+		inc bonus
 		inc pontuacao
 		mov explodiuMeio,1
 
 		jmp EXPLODE_DIR_B
 		 
 EXPLODE_DIR_B:
-
-	;	mov al,vetor[bx]
-		
+    
 		cmp vetor[bx+20],al
-		
 		jne	EXPLODE_CIM
 		
 		cmp POSx_in,8
 		je EXPLODE_CIM
 
 		mov vetor[bx],0
-		
 		mov vetor[bx+1],0
 
 		mov vetor[bx+20],0
-		
 		mov vetor[bx+21],0
-
+		inc bonus
 		inc pontuacao
 		mov explodiuMeio,1
 
 		jmp EXPLODE_CIM
 
 EXPLODE_CIM:
-		
-    ;	mov al,vetor[bx]
-		
+	
 		cmp vetor[bx-18],al
-		
 		jne	EXPLODE_BAI
-		
-		
 
 		mov vetor[bx],0
 		mov vetor[bx+1],0
 
-		
 		mov vetor[bx-18],0
-		
 		mov vetor[bx-17],0
+		inc bonus
 		inc pontuacao
 		mov explodiuMeio,1
-
+        
+	
 		jmp EXPLODE_BAI
 
 EXPLODE_BAI:
-	;	mov al,vetor[bx]
-		
+
 		cmp vetor[bx+18],al
-		
 		jne EXPLODE_ESQ_T
 
 		mov vetor[bx],0
 		mov vetor[bx+1],0
-
 		
 		mov vetor[bx+18],0
-		
 		mov vetor[bx+19],0
+		inc bonus
 		inc pontuacao
 		mov explodiuMeio,1
 
+      
 		jmp EXPLODE_ESQ_T
 
 EXPLODE_ESQ_T:
-
-		;mov al,vetor[bx]
-		
+       
 		cmp vetor[bx-20],al
-		
 		jne EXPLODE_ESQ_F
 
 		cmp POSx_in, 0
@@ -1230,15 +1223,13 @@ EXPLODE_ESQ_T:
 
 	    mov vetor[bx],0
 		mov vetor[bx+1],0
-
-		
 		mov vetor[bx-20],0
 		mov vetor[bx-19],0
-
+		inc bonus
 		inc pontuacao
 		mov explodiuMeio,1
 
-
+		
 		jmp EXPLODE_ESQ_F
 
 EXPLODE_ESQ_F:
@@ -1252,39 +1243,114 @@ EXPLODE_ESQ_F:
 
 	    mov vetor[bx],0
 		mov vetor[bx+1],0
-		
 
 		mov vetor[bx-2],0
 		mov vetor[bx-1],0
-
+		inc bonus
 		inc pontuacao
 		mov explodiuMeio,1
 
+		
 		jmp EXPLODE_ESQ_B
 
 EXPLODE_ESQ_B:
+       
 		mov indiceVetor, 108
-	;	mov al,vetor[bx]
+	
 	    mov nlinha,5
+        
+        
 
 		cmp vetor[bx+17],al
-		jne CICLOLIMPATABUL
+		jne VERIFICABONUS
 		cmp POSx_in, 0
-		je CICLOLIMPATABUL
-		
-		mov vetor[bx+16],0
+		je VERIFICABONUS
 
+		mov vetor[bx+16],0
 		mov vetor[bx+17],0
 		
 		mov vetor[bx],0
 		mov vetor[bx+1],0
-
-		
+		inc bonus
 		inc pontuacao
-		mov explodiuMeio,1
-		
+		mov explodiuMeio,1 
 
-		jmp CICLOLIMPATABUL
+		jmp VERIFICABONUS
+
+VERIFICABONUS:
+         
+		  mov ax, 0b800h  ; Segmento de mem�ria de v�deo onde vai ser desenhado o tabuleiro
+          mov es, ax
+
+		  xor si,si
+          xor dx,dx
+		  xor cx,cx
+		  xor ax,ax
+          cmp bonus, 0
+		  je CICLOLIMPATABUL
+
+		  mov al, 160
+		  mul POSy
+		  mov si, ax
+          mov ax,2
+		  mul POSx
+
+		  add si, ax
+          
+		  mov cl, 45
+		  mov ch, 43
+		  
+		  cmp es:[si], cl
+		  je explodeNeg
+		  cmp es:[si], ch
+          je explodePos
+		  cmp es:[si+2], cl
+		  je explodeNeg
+		  cmp es:[si+2], ch
+          je explodePos
+		  cmp es:[si-2], cl
+		  je explodeNeg
+		  cmp es:[si-2], ch
+          je explodePos
+		  cmp es:[si-158], cl
+		  je explodeNeg
+		  cmp es:[si-158], ch
+          je explodePos
+		  cmp es:[si+158], cl
+		  je explodeNeg
+		  cmp es:[si+158], ch
+          je explodePos
+		  cmp es:[si-160], cl
+		  je explodeNeg
+		  cmp es:[si-160], ch
+          je explodePos
+		  cmp es:[si+160], cl
+		  je explodeNeg
+		  cmp es:[si+160], ch
+          je explodePos
+		  cmp es:[si+162], cl
+		  je explodeNeg
+		  cmp es:[si+162], ch
+          je explodePos
+		  cmp es:[si-162], cl
+		  je explodeNeg
+		  cmp es:[si-162], ch
+          je explodePos
+		  jmp CICLOLIMPATABUL
+		  
+explodeNeg:
+		 dec pontuacao
+		 dec pontuacao
+		 dec pontuacao
+		 dec pontuacao
+		 jmp CICLOLIMPATABUL
+
+explodePos:
+         mov dh,0
+         mov dl, bonus
+		 add pontuacao,dl
+		 add pontuacao,1
+		 jmp CICLOLIMPATABUL
 		
 
 ESTEND:     
