@@ -140,8 +140,8 @@ TOP10 db" ",10,13
 	
 	db "																	     ",10,13
 	db "																	     ",10,13
-		db "		 													   			 ",10,13
-			db "		 													   			 ",10,13
+	db "		 													   			 ",10,13
+	db "		 													   			 ",10,13
 	db "																	     ",10,13
 	db "________________________________________________________________________________ ",10,13
 	db "		A explosao das pecas com simbolos duplica os pontos			     ",10,13
@@ -529,6 +529,57 @@ PRINC PROC
 	MOV		AX,0B800H
 	MOV		ES,AX
 	
+
+	Open_fich_pontos:
+
+;abre ficheiro
+
+        mov     ah,3dh			; vamos abrir ficheiro para leitura 
+        mov     al,0			; tipo de ficheiro	
+        lea     dx,fPontos	; nome do ficheiro
+        int     21h			; abre para leitura 
+        jc      erro_abrir_pontos		; pode aconter erro a abrir o ficheiro 
+        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
+        jmp     ler_ciclo_pontos		; depois de abero vamos ler o ficheiro 
+
+erro_abrir_pontos:
+        mov     ah,09h
+        lea     dx,Erro_Open
+        int     21h
+    
+
+ler_ciclo_pontos:
+        mov     ah,3fh			    ; indica que vai ser lido um ficheiro 
+        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
+        mov     cx,1			; numero de bytes a ler 
+        lea     dx,vetorPONTOS		; vai ler para o local de memoria apontado por dx (car_fich)
+        int     21h				; faz efectivamente a leitura
+	jc	    erro_ler_pontos		; se carry � porque aconteceu um erro
+	cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
+	je	    fecha_ficheiro_pontos	; se EOF fecha o ficheiro 
+    mov     ah,02h			; coloca o caracter no ecran
+	  mov	    dl,vetorPONTOS		; este � o caracter a enviar para o ecran
+	  int	    21h				; imprime no ecran
+	  jmp	    ler_ciclo_pontos		; continua a ler o ficheiro
+
+erro_ler_pontos:
+        mov     ah,09h
+        lea     dx,Erro_Ler_Msg
+        int     21h
+
+fecha_ficheiro_pontos:					; vamos fechar o ficheiro 
+        mov     ah,3eh
+        mov     bx,HandleFich
+        int     21h
+          ;  jnc     FIM
+
+        mov     ah,09h			; o ficheiro pode n�o fechar correctamente
+        lea     dx,Erro_Close
+        Int     21h
+
+	
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CICLOMENU:
 	
@@ -1624,55 +1675,7 @@ CARREGA_PONTUACAO:
 
 
 
-Open_fich_pontos	PROC
 
-;abre ficheiro
-
-        mov     ah,3dh			; vamos abrir ficheiro para leitura 
-        mov     al,0			; tipo de ficheiro	
-        lea     dx,fPontos	; nome do ficheiro
-        int     21h			; abre para leitura 
-        jc      erro_abrir_pontos		; pode aconter erro a abrir o ficheiro 
-        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
-        jmp     ler_ciclo_pontos		; depois de abero vamos ler o ficheiro 
-
-erro_abrir_pontos:
-        mov     ah,09h
-        lea     dx,Erro_Open
-        int     21h
-        jmp     sai
-
-ler_ciclo_pontos:
-        mov     ah,3fh			; indica que vai ser lido um ficheiro 
-        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
-        mov     cx,1			; numero de bytes a ler 
-        lea     dx,vetorPONTOS		; vai ler para o local de memoria apontado por dx (car_fich)
-        int     21h				; faz efectivamente a leitura
-	jc	    erro_ler_pontos		; se carry � porque aconteceu um erro
-	cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
-	je	    fecha_ficheiro_pontos	; se EOF fecha o ficheiro 
-        mov     ah,02h			; coloca o caracter no ecran
-	  mov	    dl,vetorPONTOS		; este � o caracter a enviar para o ecran
-	  int	    21h				; imprime no ecran
-	  jmp	    ler_ciclo_pontos		; continua a ler o ficheiro
-
-erro_ler_pontos:
-        mov     ah,09h
-        lea     dx,Erro_Ler_Msg
-        int     21h
-
-fecha_ficheiro_pontos:					; vamos fechar o ficheiro 
-        mov     ah,3eh
-        mov     bx,HandleFich
-        int     21h
-        jnc     sai
-
-        mov     ah,09h			; o ficheiro pode n�o fechar correctamente
-        lea     dx,Erro_Close
-        Int     21h
-sai:	  RET
-
-Open_fich_pontos	endp
 
 save_fich_pontos proc
 	
@@ -1713,7 +1716,7 @@ FIM:
 	
     MOV AH,4Ch
     INT 21h
-	
+
 save_fich_pontos ENDP
 
 FIM:
