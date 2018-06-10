@@ -4,7 +4,7 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
-
+ 	flagAtualizaTop db 0
 	nomeTMP db 10 
 
 	tmpPontos db 0
@@ -24,9 +24,9 @@ DADOS   SEGMENT PARA 'DATA'
 	fimTempo db 0
 		
 
-	vetorTEMPOS db   57,56,55,54,53,52,51,50,49,48,99	
-	vetorPONTOS db   27,2,0,0,0,0,0,0,0,0,1
-	vetorNOMES  db   'Jogador001Jogador002Jogador003Jogador004Jogador005Jogador006Jogador007Jogador008Jogador009Jogador010,putamadre9'
+	vetorTEMPOS db   57,56,55,54,53,52,51,50,49,48,00	
+	vetorPONTOS db   27,2,0,0,0,0,0,0,0,0,0
+	vetorNOMES  db   'Jogador001Jogador002Jogador003Jogador004Jogador005Jogador006Jogador007Jogador008Jogador009Jogador010,          '
 
 
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
@@ -39,7 +39,7 @@ DADOS   SEGMENT PARA 'DATA'
 
 		explodiuMeio db 0
 
-		pontuacao dw 0
+		pontuacao db 0
 		pontuacao_total db 0
 	    Cor3        db  7 
     ; --- DADOS PRINCIPAIS ---
@@ -159,7 +159,7 @@ TOP10 db" ",10,13
  	db "																	     ",10,13                                                                                
 	db "			PONTUACAO:													 ",10,13
 	db "																		 ",10,13
-	db "  											     					     ",10,13
+	db "  			Introduza o seu nome:			     					     ",10,13
 	db "																	     ",10,13
 	db "																	     ",10,13
 	db "$",10,13
@@ -199,6 +199,7 @@ TOP10 db" ",10,13
         Erro_Ler_Msg    db      'Erro ao tentar ler do ficheiro$'
         Erro_Close      db      'Erro ao tentar fechar o ficheiro$'
         Fich         	db      'pergunta.TXT',0
+		fPontos			db      'pontos.txt',0
         HandleFich      dw      0
         car_fich        db      ?
 
@@ -307,7 +308,8 @@ ENDM
 
 mostra_pont MACRO  pont
 	
-	mov 	ax,pontuacao
+	mov ax,0
+	mov 	al,pontuacao
 	MOV 	bl, 10     
 	div 	bl
 	add 	al, 30h				; Caracter Correspondente �s dezenas
@@ -850,8 +852,10 @@ CICLO_CURSOR:
         int     21H
  
         inc     POSxa
+
         goto_xy     POSxa,POSya
-        mov     ah, 02h
+        
+		mov     ah, 02h
         mov     dl, Car2    ; Repoe Caracter2 guardado
         int     21H
         dec         POSxa
@@ -1377,7 +1381,8 @@ PrintJogadores:
 	mov al,vetorTEMPOS[bx]
 	mov tmpTempos,al
 	
-
+	cmp flagAtualizaTop,1
+	jne toBeContinued
 	atualizaTOP:
 		
 		inc si
@@ -1429,19 +1434,30 @@ PrintJogadores:
 
 				loop trocaCar
 				
-				pop cx
-		     	inc si
-				inc bx
-				mov al,tmpSI
-				mov si, ax
+			pop cx
+		    inc si
+			inc bx
+			mov al,tmpSI
+			mov si, ax
 
 		loop atualizaTOP
 
 
 
 	
+	toBeContinued:
+mov cx,10
+	mov bx,100
+	
+	limpaSTRING:
 
+		mov vetorNOMES[bx],0
+		inc bx
+		loop limpaSTRING
 
+		mov bx,10
+	mov vetorPONTOS[bx],0
+	mov vetorTEMPOS[bx],0
 
 	mov posTOP,1
 
@@ -1516,13 +1532,17 @@ PRINT_LINHA:
 
 	inc indicePontos
 	
+	mov  flagAtualizaTop,0
+	
+
 	jmp PRINT_LINHA
 
 Teste:
  
     jmp CICLO_CURSOR
  
- 
+
+
 GAMEOVER:
 
 		call APAGA_ECRAN
@@ -1531,20 +1551,178 @@ GAMEOVER:
 		mov ah, 09h
 		int 21h
 
-		mov ah, 07h
-		int 21h
+		
+		mov cx,10
+		mov bx,100
 
-		cmp al, 49
-		je CICLOMENU
+	
+		LER_INPUT:
+				
+				xor ax, ax
+				
+				mov ah, 07h
+				
+				int 21h
 
-		jmp GAMEOVER
+		
+				cmp al,13
+				
+				je sai
+			
+				cmp al, 8
+				je backspace
+				
+				mov vetorNOMES[bx+1], al
+				mov dl, vetorNOMES[bx+1]
+
+				mov ah, 02h
+				
+				int 21h
+
+				inc bx
+				dec cx
+
+				jmp pula
+				backspace:
+				
+					mov dl, 8	
+					mov ah, 02h
+				
+				int 21h
+				mov vetorNOMES[bx],0
+				
+			
+				dec bx 
+				
+				pula:
+
+		cmp cx, 0
+		jne LER_INPUT
+		
+		sai:
+		
+		mov ah,07h
+
+		int 21h		
+
+		
+		mov bx,10
+		
+		mov dl, pontuacao
+
+		mov vetorPONTOS[bx],dl
+		mov dl, 60
+		mov vetorTEMPOS[bx],dl
+		mov  flagAtualizaTop,1
+		jmp CICLOMENU
+
+
+
+CARREGA_PONTUACAO:
+
+	
+
+
+
+Open_fich_pontos	PROC
+
+;abre ficheiro
+
+        mov     ah,3dh			; vamos abrir ficheiro para leitura 
+        mov     al,0			; tipo de ficheiro	
+        lea     dx,fPontos	; nome do ficheiro
+        int     21h			; abre para leitura 
+        jc      erro_abrir_pontos		; pode aconter erro a abrir o ficheiro 
+        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
+        jmp     ler_ciclo_pontos		; depois de abero vamos ler o ficheiro 
+
+erro_abrir_pontos:
+        mov     ah,09h
+        lea     dx,Erro_Open
+        int     21h
+        jmp     sai
+
+ler_ciclo_pontos:
+        mov     ah,3fh			; indica que vai ser lido um ficheiro 
+        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
+        mov     cx,1			; numero de bytes a ler 
+        lea     dx,vetorPONTOS		; vai ler para o local de memoria apontado por dx (car_fich)
+        int     21h				; faz efectivamente a leitura
+	jc	    erro_ler_pontos		; se carry � porque aconteceu um erro
+	cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
+	je	    fecha_ficheiro_pontos	; se EOF fecha o ficheiro 
+        mov     ah,02h			; coloca o caracter no ecran
+	  mov	    dl,vetorPONTOS		; este � o caracter a enviar para o ecran
+	  int	    21h				; imprime no ecran
+	  jmp	    ler_ciclo_pontos		; continua a ler o ficheiro
+
+erro_ler_pontos:
+        mov     ah,09h
+        lea     dx,Erro_Ler_Msg
+        int     21h
+
+fecha_ficheiro_pontos:					; vamos fechar o ficheiro 
+        mov     ah,3eh
+        mov     bx,HandleFich
+        int     21h
+        jnc     sai
+
+        mov     ah,09h			; o ficheiro pode n�o fechar correctamente
+        lea     dx,Erro_Close
+        Int     21h
+sai:	  RET
+
+Open_fich_pontos	endp
+
+save_fich_pontos proc
+	
+	
+		mov		ah, 3ch				; Abrir o ficheiro para escrita
+		mov		cx, 00H				; Define o tipo de ficheiro ??
+		lea		dx, fPontos			; DX aponta para o nome do ficheiro 
+		int		21h					; Abre efectivamente o ficheiro (AX fica com o Handle do ficheiro)
+		jnc		escreve_pontos				; Se não existir erro escreve no ficheiro
+	
+		mov		ah, 09h
+		lea		dx, msgErrorCreate
+		int		21h
+	
+		
+
+escreve_pontos:
+		mov		bx, ax				; Coloca em BX o Handle
+    	mov		ah, 40h				; indica que é para escrever
+    	
+		lea		dx, vetorPONTOS			; DX aponta para a infromação a escrever
+    	mov		cx, 240				; CX fica com o numero de bytes a escrever
+		int		21h					; Chama a rotina de escrita
+		jnc		close				; Se não existir erro na escrita fecha o ficheiro
+	
+		mov		ah, 09h
+		lea		dx, msgErrorWrite
+		int		21h
+close:
+		mov		ah,3eh				; fecha o ficheiro
+		int		21h
+		
+	
+		mov		ah, 09h
+		lea		dx, msgErrorClose
+		int		21h
 FIM:
+	
+    MOV AH,4Ch
+    INT 21h
+	
+save_fich_pontos ENDP
 
+FIM:
+	call save_fich_pontos
     MOV AH,4Ch
     INT 21h
 PRINC ENDP
  
- 
+   
  
 CODIGO  ENDS
 END PRINC
