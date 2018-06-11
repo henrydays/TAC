@@ -4,6 +4,7 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
+	fichTemp db '1',0
  	flagAtualizaTop db 0 ;variavel que diz se é preciso atualizar o top ou não
 
 	tmpPontos db 0 ;guarda os pontos realizados na ultima jogada
@@ -154,6 +155,28 @@ TOP10 db" ",10,13
 
 	db "$",10,13
 	
+	
+	layoutEditor db " ",10,13
+
+ 
+	db "  ",10,13
+	db "    ESC para guardar e sair								      				 ",10,13
+	db "    4 para sair sem guardar		    		 					 	 ",10,13
+		db "  						",10,13
+	db "   					         ",10,13
+	db "			   		  						   						  	 ",10,13
+	
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "		 													   			 ",10,13
+	db "		 													   			 ",10,13
+	db "																	     ",10,13
+	db "________________________________________________________________________________ ",10,13
+	db "		        ENTER ou SPACE para alterar as cores      			   ",10,13
+
+	db "$",10,13
+	
+	
 	MFim db " ",10,13
 	db "																	     ",10,13
 	db "		______ ________  ___  _____ ________  ________ _____ ",10,13
@@ -171,7 +194,25 @@ TOP10 db" ",10,13
 	db "$",10,13
 																		   
 
-				db      " ",10, 13,10, 13,10, 13,10, 13			
+				db      " ",10, 13,10, 13,10, 13,10, 13		
+
+
+	pagOpenFile db " ",10,13
+
+ 	db "  																				 ",10,13
+	db "     		          CARREGAR TABULEIRO EXISTENTE			  	    		 ",10,13
+	db "  																	   			 ",10,13
+	db "     			   Introduza o nome do ficheiro	 				   		 ",10,13
+	db "			    		 												 		 ",10,13
+	db "			   	formato: 'nome.txt'				   	    			 ",10,13
+	
+	db "________________________________________________________________________________ ",10,13
+	db "			Input limitada a 15 caracteres						       			 ",10,13
+	db "________________________________________________________________________________ ",10,13
+	db "																	    		 ",10,13
+	db "					                ENTER para continuar		    		  	 ",10,13
+	db "							ESC   para sair								 	 ",10,13
+	db "$",10,13	
   	; --- !VARIAVEIS DE MSG DO MENU ---	
 
 	; ---- VARIAVEIS MOSTRA VETOR ---
@@ -448,9 +489,16 @@ CONTINUA:
 	MOV 	STR12[2],'s'		
 	MOV 	STR12[3],'$'
 	GOTO_XY	22,2
-	MOSTRA	STR12 			
-		
-		goto_xy	POSy,POSx			; Volta a colocar o cursor onde estava antes de actualizar as horas
+	
+	cmp editor,1
+
+	je salto3
+	
+	MOSTRA	STR12 
+
+	salto3:
+	
+	goto_xy	POSy,POSx			; Volta a colocar o cursor onde estava antes de actualizar as horas
 	
 FIM_HORAS:		
 		POPF
@@ -490,7 +538,61 @@ LER_TEMPO_JOGO PROC
  		RET 
 LER_TEMPO_JOGO   ENDP 
 
+READ_INPUT PROC
 
+mov bx,-1
+		LER_NOME_FILE:  ;este ciclo insere caracter a caracter no fim do vetorNomes
+				
+			xor ax, ax ;limpa ax apara evitar erros
+				
+			mov ah, 07h ; Ler input do utilizador
+			int 21h		;
+
+			cmp al, 27  ;se introduzir
+			je sai1
+
+			cmp al,13	;verifica se a tecla é enter 
+			je sai1		;se for Enter , significa que o nome foi introduzido enter, logo acaba o ciclo
+			
+			cmp al, 8	 ;verifica se a tecla é backspace
+			je backspace1 ;salta para bloco de código 'backspace'
+				
+			;caso nao seja introduzida nenhuma das anteriores, continua a execução do código
+			
+			mov fichTemp[bx+1], al ;mete o valor introduzido na posição atual do vetorNomes
+			mov dl, fichTemp[bx+1] ;mete o valor no vetor em dl
+
+			mov ah, 02h ;imprime o caracter em ah no ecra para o utilizador saber o que escreveu
+			int 21h
+
+			inc bx ;  incrementa o bx para passar à proxima posição do array
+			dec cx ;  decrementa o cx por causa do ciclo
+
+			jmp pula1	;pula, para evitar a execução do bloco de código 'backspace'
+
+			backspace1:	;este código executa se o utilizador carregar em backspace
+				
+				 
+				mov dl, 8	 ;imprime o backspace no ecra para voltar atrás no ecra(criar o efeito visual)
+				mov ah, 02h
+				
+				int 21h
+
+				mov fichTemp[bx],0 ; volta à posição anterior do array e apaga o código ascii do backspace que lá foi colocado
+			
+				dec bx ;decrementa o bx para voltar atrás (como se nao tivesse sido introduzido o 'backspace')
+				
+			pula1: ;vem para aqui caso nao tenha sido executado o bloco de código 'backspace'
+				
+			cmp cx, 0 ; compara se já foram lidos 10 caracteres do teclado
+				
+			jne LER_NOME_FILE ;caso nao tenham sido, volta ao ciclo 'LER_INPUT'
+			
+			sai1:
+			ret
+			
+
+READ_INPUT ENDP
 ;~~~~~~~~~~~~~~~~~ Procedimento para atualizar a mem de video com o vetor das cores ~~~~~~~~~~~
 atualizaTabuleiro proc
 	
@@ -547,10 +649,14 @@ atualizaTabuleiro proc
 		
 
 
-		mov colunaVetor,0 ;mete os valores a 0 para estar pronto par
-
+		mov colunaVetor,0 ;mete os valores a 0 para estar pronto para próxima execução do procedimento
 		mov linhaVetor,0
 
+
+		cmp editor,1; se o modo de edição estiver ativo
+		je sai		;nao coloca o bonus
+
+		;~~~~~~~~~~Bonus duplicação ~~~~~~~~~~
 		mov al, plus
 		mov ah, minus
 
@@ -561,98 +667,133 @@ atualizaTabuleiro proc
 		mov es:[bx+642], al  
 		mov es:[bx+790], ah
 
-; ---- !MOSTRA VETOR ---		
+		;~~~~~~~~~~Bonus duplicação ~~~~~~~~~~
+		
 	SAI:  RET
+
+
 atualizaTabuleiro endp  
- 
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
 PRINC PROC
+
     MOV AX, DADOS
     MOV DS, AX
 	MOV		AX,0B800H
 	MOV		ES,AX
 
-	call open_fich_nomes
-	call open_fich_pontos
-call open_fich_tempos
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	CICLOMENU:
+	call open_fich_nomes		;abre para memória o ficheiro dos nomes
+	call open_fich_pontos		;abre para memória o ficheiro dos pontos
+	call open_fich_tempos		;memória o ficheiro dos tempos
+
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Ciclo principal - Inicio do Jogo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
-		goto_xy 0,0
-		
+	MENU_PRINCIPAL:
+	
+		mov editor,0;mete o editor a 0
 
-        ; ------LIMPAR ECRA ----
-		
-		call APAGA_ECRAN
+		goto_xy 0,0 ;vai para o inicio do ecrã
+			
+		call APAGA_ECRAN ;limpa o ecrã
 
-		; ------ !LIMPAR ECRA ----
-		
-
-        ;~~~~~~~~ Print Menu~~~~~~~~
-		lea     dx, Menu 
+		lea     dx, Menu ;imprime a string no ecrã
 		mov     ah, 09h
 		int     21h
-		;~~~~~~~~ Print Menu~~~~~~~~
+		
 
-            mov  ah, 07h ; Esperar que o utilizador insira um caracter
-            int  21h
+        mov  ah, 07h ; Espera que o utilizador introduza um caracter 
+        int  21h
             
-			cmp  al, 49 ; Se inserir 1
-              je MENUJOGAR
+		cmp  al, 49  ; se introduzir o numero 1
+        
+			je MENU_JOGAR ;salta para o menu jogar
 			
-			cmp al ,50 ; Se primir  2
-				je TOP_10
+		
+		cmp al ,50 ; se introduzir o numero 2
+			
+			je TOP_10 ;salta para o top 10
 
-			cmp al,51
-				je CONF_GRELH
+		
+		cmp al,51 ;se introduzir o numero 3
+			
+			je CONF_GRELH ;salta para a configuração da grelha
             
-			cmp al,115
-			je GRAVA_FICH
+		
+		cmp al,52 ;se introduzir o numero 4
+            
+			je fim ;salta para o fim, terminando o programa
 
-
-			cmp al,52
-                je fim
-
-			
-			
-			jmp CICLOMENU
-
-		MENUJOGAR: ; sub menu do desenho
-
-			mov fimTempo,0
-
-			call APAGA_ECRAN
-
-			lea     dx, MJogar
-			mov     ah, 09h
-			int     21h
 				
-			mov  ah, 07h ; Esperar que o utilizador insira um caracter
+		jmp MENU_PRINCIPAL ;caso nenhuma das situações anteriores se verifique, volta a executar o ciclo
+
+
+		
+		MENU_JOGAR: ;responsável pela escolha do modo de jogo 
+
+			mov fimTempo,0 ;mete a flag de fim de tempo a 0, porque vai iniciar um novo jogo
+		
+			call APAGA_ECRAN ;apaga o ecrã
+
+			lea     dx, MJogar	; apresenta no ecrã a string do menu jogar
+			mov     ah, 09h		;
+			int     21h			;
+				
+			mov  ah, 07h ; Esperar que o utilizador digite um numero
             int  21h
             	
-			mov editor,0
-			cmp  al, 49 ; Se inserir 1
-                je Jogar
+			mov editor,0	;mete a flag que indica se está no modo de edição do tabuleiro a 0
 
-			cmp  al, 50 ; Se inserir 1
-                je ABRE_BICH	
+			cmp  al, 49   ; Se inserir 1
+                je Jogar  ; salta para o jogo
+
+			cmp  al, 50 ; Se inserir 2
+                je SELECT_FILE  ;salta para a seleção do tabuleiro 	
 			
 
             cmp al,52
-                je CICLOMENU
+                je MENU_PRINCIPAL
 			
-			jmp MENUJOGAR
-			
+			jmp MENU_JOGAR ;repete o ciclo, caso não ocorra nenhuma das opções anteriores
 			
 		FORA: 
 			CMP AL, 27 ; TECLA ESCAPE
 			JE fim;
 		
-	JMP CICLOMENU
+	JMP MENU_PRINCIPAL
 
-ABRE_BICH:
+SELECT_FILE: ;ecra para selecionar o ficheiro que queremos abrir 
+		
+		call APAGA_ECRAN
+			lea     dx, pagOpenFile	; apresenta no ecrã a string do menu jogar
+			mov     ah, 09h		;
+			int     21h			;
+		
+		mov cx,15
+
+		goto_xy 26,21
+		PRINT_CAR 175
+		goto_xy 27,21	
+
+		call READ_INPUT
+		
+		mov editor,0
+		
+		mov segundos,50
+			
+		mov fimTempo,0
+
+		jmp OPEN_FILE
+
+
+jmp SELECT_FILE
+
+OPEN_FILE:
         mov     ah,3dh			; vamos abrir ficheiro para leitura 
         mov     al,0			; tipo de ficheiro	
-        lea     dx,Fich			; nome do ficheiro
+        lea     dx,fichTemp			; nome do ficheiro
         int     21h			    ; abre para leitura 
         jc      erro_abrir		; pode aconter erro a abrir o ficheiro 
         mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
@@ -676,8 +817,10 @@ ler_ciclo:
 
 erro_ler:
         mov     ah,09h
+		
         lea     dx,Erro_Ler_Msg
         int     21h
+		
 
 JogaCarregado:
 
@@ -697,41 +840,127 @@ fecha_ficheiro:					; vamos fechar o ficheiro
         lea     dx,Erro_Close
         Int     21h
 erro_abrir:
+		
+		call APAGA_ECRAN
         mov     ah,09h
         lea     dx,Erro_Open
         int     21h
-        jmp     CICLOMENU
+        
+		mov ah, 07h
+		int 21H
+		jmp SELECT_FILE
 
-GRAVA_FICH:
+EDITOR_TABUL:
+
+		
+		call APAGA_ECRAN
+			lea     dx, pagOpenFile	; apresenta no ecrã a string do menu jogar
+			mov     ah, 09h		;
+			int     21h			;
+		
+		mov cx,15
+
+		goto_xy 26,21
+		PRINT_CAR 175
+		goto_xy 27,21	
+
+		call READ_INPUT
+		
+		mov editor,0
+		
+		mov segundos,50
+			
+		mov fimTempo,0
+
+		jmp OPEN_EXIST_FILE
+
+
+jmp EDITOR_TABUL
+
+OPEN_EXIST_FILE:
+        mov     ah,3dh			; vamos abrir ficheiro para leitura 
+        mov     al,0			; tipo de ficheiro	
+        lea     dx,fichTemp			; nome do ficheiro
+        int     21h			    ; abre para leitura 
+        jc      erro_abrir		; pode aconter erro a abrir o ficheiro 
+        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
+        jmp     ler_ciclo_1		; depois de abero vamos ler o ficheiro 
+
+ler_ciclo_1:
+        mov     ah,3fh			; indica que vai ser lido um ficheiro 
+        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
+        mov     cx,108			; numero de bytes a ler 
+        lea     dx,vetor		; vai ler para o local de memoria apontado por dx (car_fich)
+        int     21h				; faz efectivamente a leitura
+		jc	    erro_ler_1		; se carry � porque aconteceu um erro
+		cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
+		je	    fecha_ficheiro_1	; se EOF fecha o ficheiro 
+    
+		mov     ah,02h			; coloca o caracter no ecran
+	  ;mov	    dl,vetor	; este � o caracter a enviar para o ecran
+	 
+	  int	    21h				; imprime no ecran
+	  jmp	    CONF_GRELH		; continua a ler o ficheiro
+
+erro_ler_1:
+        mov     ah,09h
+		
+        lea     dx,Erro_Ler_Msg
+        int     21h
+		jmp CONF_GRELH
+
+
+fecha_ficheiro_1:					; vamos fechar o ficheiro 
+        mov     ah,3eh
+        mov     bx,HandleFich
+        int     21h
+        jnc     Jogar
+
+        mov     ah,09h			; o ficheiro pode n�o fechar correctamente
+        lea     dx,Erro_Close
+        Int     21h
+	
+erro_abrir_1:
+		
+		call APAGA_ECRAN
+        mov     ah,09h
+        lea     dx,Erro_Open
+        int     21h
+        
+		mov ah, 07h
+		int 21H
+		jmp UPDATE_FILE
+
+UPDATE_FILE:
 		
 		
 		mov		ah, 3ch				; Abrir o ficheiro para escrita
 		mov		cx, 00H				; Define o tipo de ficheiro ??
-		lea		dx, fname			; DX aponta para o nome do ficheiro 
+		lea		dx, fichTemp			; DX aponta para o nome do ficheiro 
 		int		21h					; Abre efectivamente o ficheiro (AX fica com o Handle do ficheiro)
 		jnc		escreve				; Se não existir erro escreve no ficheiro
-	
 		mov		ah, 09h
 		lea		dx, msgErrorCreate
 		int		21h
-	
-		jmp		fim	
-	
-
-
+		jmp MENU_JOGAR
+			
 escreve:
 
 		mov		bx, ax				; Coloca em BX o Handle
     	mov		ah, 40h				; indica que é para escrever
     	
-		lea		dx, vetor			; DX aponta para a infromação a escrever
+		lea		dx, vetor			; DX aponta para a informação a escrever
     	mov		cx, 108					; CX fica com o numero de bytes a escrever
 		int		21h					; Chama a rotina de escrita
-		jnc		close				; Se não existir erro na escrita fecha o ficheiro
+		
+		jnc		MENU_PRINCIPAL				; Se não existir erro na escrita fecha o ficheiro
 	
 		mov		ah, 09h
 		lea		dx, msgErrorWrite
 		int		21h	
+		mov ah, 07h
+		int 21H
+		jmp SELECT_FILE
 
 close:
 		mov		ah,3eh				; fecha o ficheiro
@@ -744,35 +973,54 @@ close:
 
 CONF_GRELH:
 
+		
 		mov editor,1
+
+		jmp EDITOR_TABUL
+
 		jmp jogar
 
-		jmp CICLOMENU
+		jmp MENU_PRINCIPAL
 
 jogar:
-; ------LIMPAR ECRA ----
+
+
 		MOV		AX,0B800H
 		MOV		ES,AX
+		
+		
 		call APAGA_ECRAN
-; ------ !LIMPAR ECRA ----
- 	lea     dx, jogo
+		
+		
+		cmp editor,1
+		
+		jne salto5
+
+			lea     dx, layoutEditor
 			mov     ah, 09h
 			int     21h
+			mov segundos,60
+			jmp salto2
+
+		salto5:
+		;caso nao esteja ativo o modo de edição
+ 		lea     dx, jogo
+		mov     ah, 09h
+		int     21h
+		mov pontuacao,0
+   		mov Segundos, 60 ; iniciou o jogo
 		
+		salto2:
+
 		mov iniX, 60
 		mov iniY,8
 		mov tamX ,9
 		mov tamY,6
 
-		mov pontuacao,0
-   		mov Segundos, 30 ; iniciou o jogo
-		
 		goto_xy  20,20
 	
-
-; --- TABULEIRO ---
-    mov cx,10       ; Faz o ciclo 10 vezes
-	xor si,si 
+	    mov cx,10       ; Faz o ciclo 10 vezes
+		xor si,si 
 
 
 ciclo4:
@@ -939,8 +1187,10 @@ CICLO_CURSOR:
  	;      mov     dl, Car
  	;      int     21H        
 		
+		cmp editor ,1
+		je salto4
 		mostra_pont pontuacao
-
+		salto4:
 
 		;goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
 		;mov al, 48
@@ -1001,7 +1251,7 @@ LER_SETA: ;ciclo que está sempre a executar e le a input do utilizador
      
         
        	cmp AL,52   
-		je CICLOMENU
+		je MENU_PRINCIPAL
 	
  
 		cmp editor,1
@@ -1044,14 +1294,21 @@ OLHAEXPLOSAO:
 
 MUDACOR:
 
-		cmp editor, 0
-		je CICLOMENU
+		cmp editor, 0      ;verifica se a flag do editor está a 0
+		je MENU_PRINCIPAL  ;caso seja verdade, o editor acabou e volta para o meno principal
 		
 		cmp al,52
-		je CICLOMENU
-		cmp al, 32
-
+		je MENU_PRINCIPAL	;volta para o menu principal
+		
+		cmp al, 32			;caso pressione espaço
 		je METECOR
+
+		cmp al,13			;caso pressione enter
+		je METECOR
+
+		cmp al,27			;caso pressione ESC
+		je UPDATE_FILE
+
 		
 		jmp LER_SETA
 
@@ -1579,7 +1836,7 @@ COR_CIMA:
 	int  21h
 			
 	cmp  al, 52 ; caso a input do utilizador seja 4 
-        je CICLOMENU ;salta para o menu principal
+        je MENU_PRINCIPAL ;salta para o menu principal
 
 	
 	;~~~~~~~~~~~~~~~~~~~~~~~~~~  Imprime Linha com os registos de cada jogador ~~~~~~~~~~~~~~~
