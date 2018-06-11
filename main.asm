@@ -4,29 +4,32 @@
  
 DADOS   SEGMENT PARA 'DATA'
 
- 	flagAtualizaTop db 0
-	nomeTMP db 10 
+ 	flagAtualizaTop db 0 ;variavel que diz se é preciso atualizar o top ou não
 
-	tmpPontos db 0
-	tmpTempos db 0
-	tmpSI db 0
+	tmpPontos db 0 ;guarda os pontos realizados na ultima jogada
+	tmpTempos db 0 ;guarda os  
+	tmpSI db 0		;usada para guardar o valor de SI depois do ciclo trocaCar
 
+	;~~~~~~ variaveis usadas para saber a localização atual do cursor no top 10~~~~
 	posXtop db 0
 	posYtop db 0
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	posTOP db 1	;usado para guardar os lugares no top (1º-10º)
 
-	posTOP db 1
-	indicePontos dw 0
+	
+	indicePontos dw  0 ;para fazer o ciclo 10 vezes de imprimir a informação 
 
-	indiceVetor dw 0
-	count db 0
+	indiceVetor dw 0  ;usado para guardar a posição no vetor (quando descemos as peças no tabuleiro)
 
-	fimTempo db 0
+	count db 0 ;usado para guardar as linhas do tabuleiro quando descemos 
+
+	fimTempo db 0 ;flag que guarda o fim do programa 
 		
 
-	vetorTEMPOS db   57,56,55,54,53,52,51,50,49,48,00	
-	vetorPONTOS db   27,2,0,0,0,0,0,0,0,0,0
-	vetorNOMES  db   'Jogador001Jogador002Jogador003Jogador004Jogador005Jogador006Jogador007Jogador008Jogador009Jogador010,          '
+	vetorTEMPOS db      0,0,0,0,0,0,0,0,0,0,0
+	vetorPONTOS db  	0,0,0,0,0,0,0,0,0,0,0
+	vetorNOMES  db   '                                                                                                              '
 
 
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
@@ -37,11 +40,11 @@ DADOS   SEGMENT PARA 'DATA'
 ;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
 
 
-		explodiuMeio db 0
+		explodiuMeio db 0 ;flag para informar se foi explodida a peça onde se encontra o cursor
 
 		pontuacao db 0
 		pontuacao_total db 0
-	    Cor3        db  7 
+	
     ; --- DADOS PRINCIPAIS ---
 		POSx_in db 4 ;posicao X dentro do tabul
 		POSy_in db 3 ;posicao Y dentro do tabul
@@ -66,7 +69,7 @@ DADOS   SEGMENT PARA 'DATA'
         ultimo_num_aleat dw 0
         str_num db 5 dup(?),'$'
         ;cor    db  0
-        carESP  db  ' '    
+        espaco  db  ' '    
     ; --- !VARIAVEIS DO TABULEIRO ---
    
     ; --- VARIAVEIS DO CURSOR ---
@@ -174,8 +177,8 @@ TOP10 db" ",10,13
 	; ---- VARIAVEIS MOSTRA VETOR ---
 		tamX_v db 9 ; Largura do tabuleiro
         tamY_v db 6 ; Altura do tabuleiro
-		linha_v db 0
-		coluna_v db 0
+		linhaVetor db 0
+		colunaVetor db 0
 	; --- !VARIAVEIS MOSTRA VETOR ---
 	
 	;------TRATA_HORAS_JOGO E DATA_JOGO ---
@@ -187,24 +190,34 @@ TOP10 db" ",10,13
 	
 	
 		
-	;~~~~~~~~FIcheiros~~~~~~~~~~~~~
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FICHEIROS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	fname	db	'pergunta.txt',0
-	fhandle dw	0
+			fname	db	'pergunta.txt',0
+			fhandle dw	0
+			HandleFich      dw      0
+        	car_fich        db      ?
 
-	msgErrorCreate	db	"Ocorreu um erro na criacao do ficheiro!$"
-	msgErrorWrite	db	"Ocorreu um erro na escrita para ficheiro!$"
-	msgErrorClose	db	"Ocorreu um erro no fecho do ficheiro!$"	
-	
-   
+			;~~~~~~~~~~~~~~~~~~~~ MENSAGENS DE ERRO FICHEIROS ~~~~~~~~~~~~~~~~~~~~~
+			msgErrorCreate	db	    "Ocorreu um erro na criacao do ficheiro!$"
+			msgErrorWrite	db	    "Ocorreu um erro na escrita para ficheiro!$"
+			msgErrorClose	db	    "Ocorreu um erro no fecho do ficheiro!$"	
+        	Erro_Open       db      'Erro ao tentar abrir o ficheiro$'
+        	Erro_Ler_Msg    db      'Erro ao tentar ler do ficheiro$'
+       	 	Erro_Close      db      'Erro ao tentar fechar o ficheiro$'
+       		;~~~~~~~~~~~~~~~~~~~ FIM MENSAGENS DE ERRO FICHEIROS ~~~~~~~~~~~~~~~~~
+		    
+			;~~~~~~~~~~~~~~~~~~~ NOMES DOS FICHEIROS EM MEMÓRIA ~~~~~~~~~~~~~~~~~~
+			
+			Fich         	db      'pergunta.TXT'  ,0
+			fPontos      	db 		'pontos.txt'    ,0
+			fNomes			db      'nomes.txt'     ,0
+			fTempo			db      'tempos.txt'    ,0
+			fTabuleiro      db      'tabuleiro.txt' ,0
+        	
+			;~~~~~~~~~~~~~~~~~~~ NOMES DOS FICHEIROS EM MEMÓRIA ~~~~~~~~~~~~~~~~~~
 
-        Erro_Open       db      'Erro ao tentar abrir o ficheiro$'
-        Erro_Ler_Msg    db      'Erro ao tentar ler do ficheiro$'
-        Erro_Close      db      'Erro ao tentar fechar o ficheiro$'
-        Fich         	db      'pergunta.TXT',0
-		fPontos			db      'pontos.txt',0
-        HandleFich      dw      0
-        car_fich        db      ?
+
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FICHEIROS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 DADOS   ENDS
  
@@ -478,120 +491,89 @@ LER_TEMPO_JOGO PROC
 LER_TEMPO_JOGO   ENDP 
 
 
-;Procedimento para mostrar vetor
-ImprimeVetor proc
+;~~~~~~~~~~~~~~~~~ Procedimento para atualizar a mem de video com o vetor das cores ~~~~~~~~~~~
+atualizaTabuleiro proc
 	
-	; ---- MOSTRA VETOR --- 
+	;~~~~~  mete tudo a 0 para evitar erros~~~~~ 
+	xor bx, bx
+	xor ax,ax
 	xor si,si
 	xor di,di
-	xor bx, bx
 	xor cx,cx
-	xor ax,ax
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	mov linhaVetor , 0 ;mete as variaveis a 0
+	mov colunaVetor,0 ;mete as variaveis a 0
 	
-	mov bx, 160*8
-	add bx, 60
-	mov coluna_v,0
-	mov linha_v,0
-		
-	jmp mostra_vetor
+
+	mov bx, 160*8 ;multiplica nr de caracteres por linha com o numero de linhas 
+	add bx, 60	  ;adiciona o 30*2 (30 col * 2(cada col ocupa 2 bytes)) 
+
+	jmp mostrar  ;
 	
-	br:
-		mov coluna_v,0
-		inc linha_v
+	linha:
+
+		mov colunaVetor,0
+		inc linhaVetor
 		
-		add bx, 160
-		sub bx, 36
+		add bx, 160 ;adiciona 160bytes(andar uma linha na memória de video para baixo)
+		sub bx, 36	;subtrai (18*2 da linha anterior)
 		
-	mostra_vetor:
+	mostrar:
 		
-		cmp coluna_v,18
-		je br
+	
+		cmp colunaVetor,18   ;verifica se cheguou ao fim da linha
+		
+		je linha		     ;cria nova linha
 				
-		mov cl, vetor[si]
-        mov dh, carESP   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
-        mov es:[bx],   dh      
-        mov es:[bx+1], cl   ; Coloca as caracter�sticas de cor da posi��o atual
-        inc bx     
+		mov cl, vetor[si]    ;mete a cor atual em cl
+
+        mov dh, espaco       ;mete um espaço em dh
+        
+		mov es:[bx], dh      ;mete o espaço em dh, na memória de video
+ 
+        mov es:[bx+1], cl    ;mete a cor, na posição da memória de video
+       
+	    inc bx     			 ;incrementa o valor de bx em 2 (bx usado como indice da memória de video)
         inc bx 
 		
-		inc si
-		inc coluna_v
+		inc si		;incrementa SI(usado para andar no vetor das cores em memória)
+
+		inc colunaVetor  ;incrementa a variavel com a informação da col atual
 		
-		cmp si, 108
-		jne mostra_vetor
+		cmp si, 108 ;comparar para ver se chego ao fim do tabuleiro
+
+		jne mostrar	;se nao for continua a fazer o ciclo
 		
-		mov coluna_v,0
-		mov linha_v,0
+
+
+		mov colunaVetor,0 ;mete os valores a 0 para estar pronto par
+
+		mov linhaVetor,0
 
 		mov al, plus
 		mov ah, minus
+
 	    mov bx, 1360
         mov es:[bx], al  ;primeiro mais
 		mov es:[bx+172], al  ;segundo
 		mov es:[bx+310], ah  
 		mov es:[bx+642], al  
 		mov es:[bx+790], ah
+
 ; ---- !MOSTRA VETOR ---		
 	SAI:  RET
-ImprimeVetor endp  
+atualizaTabuleiro endp  
  
 PRINC PROC
     MOV AX, DADOS
     MOV DS, AX
 	MOV		AX,0B800H
 	MOV		ES,AX
-	
 
-	Open_fich_pontos:
-
-;abre ficheiro
-
-        mov     ah,3dh			; vamos abrir ficheiro para leitura 
-        mov     al,0			; tipo de ficheiro	
-        lea     dx,fPontos	; nome do ficheiro
-        int     21h			; abre para leitura 
-        jc      erro_abrir_pontos		; pode aconter erro a abrir o ficheiro 
-        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
-        jmp     ler_ciclo_pontos		; depois de abero vamos ler o ficheiro 
-
-erro_abrir_pontos:
-        mov     ah,09h
-        lea     dx,Erro_Open
-        int     21h
-    
-
-ler_ciclo_pontos:
-        mov     ah,3fh			    ; indica que vai ser lido um ficheiro 
-        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
-        mov     cx,1			; numero de bytes a ler 
-        lea     dx,vetorPONTOS		; vai ler para o local de memoria apontado por dx (car_fich)
-        int     21h				; faz efectivamente a leitura
-	jc	    erro_ler_pontos		; se carry � porque aconteceu um erro
-	cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
-	je	    fecha_ficheiro_pontos	; se EOF fecha o ficheiro 
-    mov     ah,02h			; coloca o caracter no ecran
-	  mov	    dl,vetorPONTOS		; este � o caracter a enviar para o ecran
-	  int	    21h				; imprime no ecran
-	  jmp	    ler_ciclo_pontos		; continua a ler o ficheiro
-
-erro_ler_pontos:
-        mov     ah,09h
-        lea     dx,Erro_Ler_Msg
-        int     21h
-
-fecha_ficheiro_pontos:					; vamos fechar o ficheiro 
-        mov     ah,3eh
-        mov     bx,HandleFich
-        int     21h
-          ;  jnc     FIM
-
-        mov     ah,09h			; o ficheiro pode n�o fechar correctamente
-        lea     dx,Erro_Close
-        Int     21h
-
-	
-
-
+	call open_fich_nomes
+	call open_fich_pontos
+call open_fich_tempos
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CICLOMENU:
 	
@@ -701,9 +683,8 @@ JogaCarregado:
 
 		mov  Segundos,60
 		call APAGA_ECRAN
-		call ImprimeVetor
+		call atualizaTabuleiro
 		call CICLO_CURSOR
-
 
 
 fecha_ficheiro:					; vamos fechar o ficheiro 
@@ -784,7 +765,7 @@ jogar:
 		mov tamY,6
 
 		mov pontuacao,0
-   		mov Segundos, 5 ; iniciou o jogo
+   		mov Segundos, 30 ; iniciou o jogo
 		
 		goto_xy  20,20
 	
@@ -818,7 +799,7 @@ ciclo2:
  
         mov cl, tamX    ;Numero de colunas usando a variavel tamX
 ciclo:     
-        mov     dh, carESP  ; vai imprimir o caracter "SAPCE"
+        mov     dh, espaco  ; vai imprimir o caracter "SAPCE"
         mov es:[bx],dh  ;
    
 novacor:   
@@ -829,13 +810,13 @@ novacor:
         cmp al, 0       ; Se o fundo de ecran � preto
         je  novacor     ; vai buscar outra cor
  
-        mov     dh,    carESP   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
+        mov     dh,    espaco   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
         mov es:[bx],   dh      
         mov es:[bx+1], al   ; Coloca as caracter�sticas de cor da posi��o atual
         inc bx     
         inc bx      ; pr�xima posi��o e ecran dois bytes � frente
 		
-        mov     dh,    carESP   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
+        mov     dh,    espaco   ; Repete mais uma vez porque cada pe�a do tabuleiro ocupa dois carecteres de ecran
         mov es:[bx],   dh
         mov es:[bx+1], al
         inc bx
@@ -904,11 +885,7 @@ novacor:
  
 CICLO_CURSOR:       
         
-	
-		
         goto_xy POSxa,POSya ; Vai para a posi��o anterior do cursor
-
-
 
         mov     ah, 02h
         mov     dl, Car ; Repoe Caracter guardado
@@ -957,14 +934,10 @@ CICLO_CURSOR:
 		;--- Retifica cor de fundo
 		dec     POSx
        
-       
 	;      goto_xy     0,0        ; Mostra o caractr que estava na posi��o do AVATAR
 	;      mov     ah, 02h         ; IMPRIME caracter da posi��o no canto
  	;      mov     dl, Car
  	;      int     21H        
-   
-
-		
 		
 		mostra_pont pontuacao
 
@@ -987,21 +960,18 @@ CICLO_CURSOR:
 
 		cmp al,113
 		je FIM
-		
-
-
-        
+		        
 
 IMPRIME:    
 		
 		mov     ah, 02h
-        mov     dl, 178 ;Coloca AVATAR1  Gon�alo Muda para 176, 177, 178 e v� qual fica melhor
+        mov     dl, 178 
         int     21H
        
         inc     POSx
         goto_xy     POSx,POSy      
         mov     ah, 02h
-        mov     dl, 178 ; Coloca AVATAR2 Gon�alo Muda para 176, 177, 178 e v� qual fica melhor
+        mov     dl, 178 
         int     21H
         dec     POSx
        
@@ -1009,19 +979,20 @@ IMPRIME:
        
         mov     al, POSx    ; Guarda a posi��o do cursor
         mov     POSxa, al
-        mov     al, POSy    ; Guarda a posi��o do cursor
-        mov         POSya, al
+        mov     al, POSy    ; Guarda a posição do cursor
+        mov     POSya, al
 
 
 
    
-LER_SETA:
-	
-		cmp fimTempo,1
+LER_SETA: ;ciclo que está sempre a executar e le a input do utilizador
 
-		je GAMEOVER
+		cmp fimTempo,1 ;verifica se o tempo já chegou ao fim 
 		
-		call	ImprimeVetor
+		je GAMEOVER    ;se o tempo acabou, salta para O GAMEOVER
+		
+		call  atualizaTabuleiro ; atualiza o ecrã com o vetor de cores em memória 
+
 		call        LE_TECLA
 
 
@@ -1453,302 +1424,506 @@ COR_CIMA:
 	
 	jmp CICLOLIMPATABUL
 
-TOP_10:	
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TOP 10 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	Página do top10 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	TOP_10:	
 			
-			call APAGA_ECRAN
+		call APAGA_ECRAN ;chama o procedimento para apagar o ecra
 			
-			goto_xy 0,0
+		goto_xy 0,0	;vai para o inicio do ecrã
 		
-			lea     dx, TOP10
-			mov     ah, 09h
-			int     21h
-			
-				mov posXtop,10
-				
-				mov posYtop,10
-			xor bx,bx
+		lea     dx, TOP10 ;load efective adress da string do top10
+		mov     ah, 09h
+		int     21h
 
-			mov indicePontos ,0
-
-			jmp PrintJogadores	
-			
+		;~~~~Cordenadas iniciais onde vai começar a ser escrita e informação 	
+		mov posXtop,10	
+		mov posYtop,10
+		;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		
-; imprime no ecra os pontos
+		xor bx,bx ;mete o bx a 0 para reduzir os erros
 
+		mov indicePontos,0  ;enquanto este indice for != 10 , o ciclo de imprimir linha continua
 
+		jmp PrintJogadores	;imprime as informações dos 10 melhores jogadores 
+	                                   
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~		
+	
 
+	;~~~~~~~~~~~~~~~~~~~~ Imprime as informações dos 10 melhores jogadores ~~~~~~~~~~~~~~~~~~
+	PrintJogadores:
+	
+		mov cx,10;numero de vezes que o ciclo é executado
 
-PrintJogadores:
-
-
-	;atualizar a lista
-	mov cx,10
-
-	xor bx,bx
-	xor dx,dx
-	mov si,0
+		xor bx,bx ;mete o bx a 0 para evitar erros
+		xor dx,dx ;mete o dx a 0 para evitar erros 
+		
+		mov si,0 ;o si é usado para saber qual a posição dentro dos arrays com tamanho 10
 	
 	
-	mov bx,10
-	xor ax,ax
+		mov bx,10 ; bx colocado a 10 para aceder ao vetor[10], ou seja ao novo valor adicionado no fim
+		xor ax,ax ;mete o ax a 0 para evitar erros
 
-	mov dl ,vetorPONTOS[bx]
-	mov tmpPontos,dl
+		mov dl ,vetorPONTOS[bx] ;coloca os pontos realizados na ultima jogada em dl
+		mov tmpPontos,dl ;coloca os pontos da ultima jogada na variavel 'tmpPontos'
 
-	mov al,vetorTEMPOS[bx]
-	mov tmpTempos,al
+		mov al,vetorTEMPOS[bx] ;coloca o tempo da ultima jogada na variavel 'tmpTempos'
+		mov tmpTempos,al ;coloca o tempo da ultima jogada na variável 'tmpTempos'
 	
-	cmp flagAtualizaTop,1
-	jne toBeContinued
-	atualizaTOP:
-		
-		inc si
+		cmp flagAtualizaTop,1 ;variavel que identica se é necessário atualizar o top
 
-		mov dl, tmpPontos
-		mov al, tmpTempos
-
-		cmp vetorPONTOS[si-1],dl	
+		jne salto ;se 'flagAtualizaTop' for igual a 1, continua a execução do código, senão salta 
 		
-		ja atualizaTOP
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	;~~~~~~~~~~~~~~~  Atualiza os vetores em memória, ordenando por pontuação ~~~~~~~~~~~~~~~~
+	atualizaTOP: 
+		
+		inc si ;incrementa si, ou seja, aumenta a posição dentro dos arrays
+
+		mov dl, tmpPontos ;copia para dl, a ultima pontuação feita pelo jogador
+		mov al, tmpTempos ;copia para al, o ultimo tempo feito pelo jogador
+
+		cmp vetorPONTOS[si-1],dl ;compara os pontos com os do ultimo jogador 
+		
+		ja atualizaTOP ;caso o vetorPONTOS[si-1] seja maior, ignora e volta a executar o ciclo 
 	
-			mov dh, vetorPONTOS[si-1]
-			mov ah,vetorTEMPOS[si-1]
-			mov vetorPONTOS[si-1],dl
-			mov vetorTEMPOS[si-1],al		
-			mov tmpPontos,dh
-			mov tmpTempos,ah
+		mov dh, vetorPONTOS[si-1] ;copia os pontos atuais para dh
+		mov ah,vetorTEMPOS[si-1]  ;copia o tempo atual para ah	
+		mov vetorPONTOS[si-1],dl  ;copia para a posição atual, os pontos na ultima posição do array
+		mov vetorTEMPOS[si-1],al  ;copia para a posição atual, o tempo na ultima posição do arry	
+		mov tmpPontos,dh		  ;copia para a variavel 'tmpPontos' os pontos anteriores existentes no array
+		mov tmpTempos,ah		  ;copia para a variavel 'tmptempos' o tempo existente no vetor antes de ser alterado
 
-			;;trocar nomes 
-			push cx
-			mov cx,10
+		push cx   ; mete o cx na pilha, visto que vamos alterar o valor de cx com o uso do loop
+		
+		mov cx,10 ; mete o valor 10 no cx, para executar o loop 10 vezes
 			
+		mov ax,si ; copiar si para ax para copiar o valor de si para a variável tmpSI
 
-				
-				mov ax,si
-			mov tmpSI,al
-			dec si
+		mov tmpSI,al ;copia efectivamente o valor de si para tmpSI
+					 ;esta variavel vai ser usada para recuperar o valor de si no final do ciclo 'trocaCar'
+
+		dec si	  ;decrementa Si uma vez que ele possui mais um do que a posição atual no vetor 
 			   
-			mov ax,10
-			mul si
-			mov si,ax
-			mov bx,100
-			inc bx
-
-			trocaCar:
-
-				mov dl, vetorNOMES[bx]
-				
-				mov dh , vetorNOMES[si]
-
-				mov vetorNOMES[bx],dh
-
-				mov vetorNOMES[si],dl
-
-				inc bx
-				
-				inc si
-				
-
-				loop trocaCar
-				
-			pop cx
-		    inc si
-			inc bx
-			mov al,tmpSI
-			mov si, ax
-
-		loop atualizaTOP
-
-
-
-	
-	toBeContinued:
-mov cx,10
-	mov bx,100
-	
-	limpaSTRING:
-
-		mov vetorNOMES[bx],0
+		mov ax,10 ;mete 10 no ax para fazer a multiplicação
+		
+		mul si	  ;mutiplica o Si(posição no array) por 10(existente em ax)
+		
+		mov si,ax ;passa o resultado da multiplicação para SI
+		
+		mov bx,100;mete 100 em bx (para aceder ao ultimo nome no vetorNOMES), cada pessoa ocupa 10bytes 
+		
 		inc bx
-		loop limpaSTRING
 
-		mov bx,10
-	mov vetorPONTOS[bx],0
-	mov vetorTEMPOS[bx],0
+		trocaCar: ;ciclo responsável por trocar o nome do indice atual com o nome na ultima posição do vetorNomes
 
-	mov posTOP,1
+			mov dl, vetorNOMES[bx]  ;mete em dl o caracter vetorNOMES[bx] (caracter bx-100 do nome)
+				
+			mov dh , vetorNOMES[si] ;mete em dh o caracter do nome atual 
 
-	xor bx,bx
-	xor si,si
+			mov vetorNOMES[bx],dh   ;mete na ultima posição do vetorNOMES o caracter em dh(do nome a trocar)
+
+			mov vetorNOMES[si],dl	;mete no nome atual o caracter existente no fim do vetorNOMES
+
+			inc bx	;incrementa o bx ,para passar ao caracter seguinte (aceder ao ultimo nome)
+				
+			inc si	;incrementa o si, para passar ao caracter seguinte (no nome atual)
+				
+			loop trocaCar ; continua o loop enquanto o cx for maior que 0
+				
+		pop cx  ;recupera da pilha o valor de cx (foi alterado para fazer o ciclo 'trocaCar' )
+		
+		mov al,tmpSI ;copia para al o valor de SI guardado 
+		
+		mov si, ax   ;recupera o valor de SI que foi alterado dentro do ciclo trocaCar
+
+		loop atualizaTOP  ;repete o cilco enquanto cx for maior que 0
+
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	salto: ;a execução do programa vem para aqui, caso o top n seja atualizado
 	
+	mov cx,10  ;copia 10 para cx, para fazer o loop 10 vezes
 
-	cmp indicePontos,10
+	mov bx,100 ;copia 100 para o bx (para aceder ao ultimo nome no vetorNOMES)
+	
+	limpaSTRING: ; ciclo para limpar o ultimo nome no vetor(garantir que não aparecem caracteres estranhos)
 
-	jne PRINT_LINHA
+		mov vetorNOMES[bx],0 ;mete a posição do vetor a 0
+
+		inc bx	;incrementa o bx para andar para a frente no vetor 
+
+		loop limpaSTRING ;executa o cilco enquanto cx > 0
+
+	mov bx,10 ;copia 10 para bx (para aceder aos ultimos valores nos vetores de pontos e de tempo)
+
+	mov vetorPONTOS[bx],0 ;coloca a 0 o ultimo valor no vetor dos pontos
+	mov vetorTEMPOS[bx],0 ;coloca a 0 o ultimo valor no vetor dos tempos
+
+	mov posTOP,1 ;variavel usada para imprimir a POsição que vai aparecer do lado esquerdo (1...10)
+
+	xor bx,bx ;mete bx a 0 para evitar erros
+
+	xor si,si ;mete si a 0 para evitar erros
+	
+	cmp indicePontos,10 ;verifica se já foram imprimidos 10 valores de resultados
+
+	jne PRINT_LINHA	 ;caso o 'indicePontos' seja diferente de 10, vai para o ciclo 'Imprime_Linha'
 
 
 	mov  ah, 07h ; Esperar que o utilizador insira um caracter
-    int  21h
+    
+	int  21h
 			
-			
-			cmp  al, 52 ; Se inserir 2
-                je CICLOMENU
+	cmp  al, 52 ; caso a input do utilizador seja 4 
+        je CICLOMENU ;salta para o menu principal
 
 	
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~  Imprime Linha com os registos de cada jogador ~~~~~~~~~~~~~~~
+	PRINT_LINHA:
+	
+		goto_xy posXtop,posYtop ;vai para a posição de inicio, definida anterior 
 
-PRINT_LINHA:
+		cmp indicePontos, 10  ;verifica se o ciclo já ocorreu 10 vezes
 	
-	goto_xy posXtop,posYtop
+		je PrintJogadores	  ;caso seja verdade, volta para o ciclo anterior 
+	
+		GOTO_XY	10,posYtop    ;vai para a coluna 10 para imprimir a posição no ranking
 
-	cmp indicePontos, 10
-	
-	je PrintJogadores
-	
-	GOTO_XY	10,posYtop
-
-	mov cl ,posTOP
-	PRINT_NUMERO cl
-	
-	mov posXtop, 25
-	GOTO_XY	posXtop,posYtop
-	
-	PRINT_NUMERO vetorPONTOS[bx]	
-	
-	mov posXtop, 40
-
-	GOTO_XY posXtop,posYtop
-	
-	PRINT_NUMERO vetorTEMPOS[bx]	
-	
-	mov posXtop, 58
-	GOTO_XY posXtop,posYtop
-	
-	mov cx,10
-	mov si,0
-
-	mov ax,indicePontos
-	
-	mul cx
-
-	mov si, ax
-
-	;Nome atual
-	
-		PRINT_NOME:
+		mov cl ,posTOP 		  ;mete em cl a posição do ranking (vai de 1º a 10º)
 		
-		PRINT_CAR vetorNOMES[si]
-		
-		inc si
-		
-
-		loop PRINT_NOME
-
-	add posYtop,1
-	inc posTOP
-	inc bx
-
-	inc indicePontos
+		PRINT_NUMERO cl		  ;usa a macro 'PRINT_NUMERO' para imprimir na posição do cursor o valor em cl
 	
-	mov  flagAtualizaTop,0
+		mov posXtop, 25       ;mete o valor 25 na posição xtop
+
+		GOTO_XY	posXtop,posYtop ;vai para a posição de coluna 25 para imprimir os pontos
 	
+		PRINT_NUMERO vetorPONTOS[bx] ;imprime os pontos em vetorPONTOS[bx] na posição do cursor
+	
+		mov posXtop, 40	 ;mete o valor 40 na posição xtop
 
-	jmp PRINT_LINHA
+		GOTO_XY posXtop,posYtop  ;vai para a coluna 40 para imprimir o tempo
+	
+		PRINT_NUMERO vetorTEMPOS[bx] ;imprime o valor atual do tempo na posição do cursor
+	
+		mov posXtop, 58  ;mete o valor 58 na posição xtop
 
-Teste:
+		GOTO_XY posXtop,posYtop ;vai para a coluna 58 para imprimir o nome atual
+	
+		mov cx,10 ;mete o valor 10 em cx para usar no ciclo
+		
+		mov si,0 ;mete o SI a 0 para apagar os valores usados anteriormente
+
+		mov ax,indicePontos ;mete o valor de 'indicePontos' para fazer a multiplicação
+	
+		mul cx	;multiplica 'indicePontos' por 10 para obter o a posição onde começa o nome atual em 'vetorNomes'
+
+		mov si, ax ;copia o resultado da multiplicação para si 
+	
+		PRINT_NOME: ;ciclo que imprime 10 caracteres do nome
+		
+			PRINT_CAR vetorNOMES[si]; imprime caracter na posição vetorNOMES[si]
+		
+			inc si; incrementar si para andar para a frente no array
+		
+
+		loop PRINT_NOME; ocorre enquanto cx >0
+
+
+	inc posYtop ;incrementa posYtop , para passar para a linha seguinte
+	inc posTOP ;incrementa posTOP para passar para o proximo lugar do top
+	
+	inc bx	;incrementa o bx para passar ao proximo jogador
+
+	inc indicePontos ;incrementa o 'indicePontos' para informar que já imprimiu mais uma linha, ciclo para quando =10
+	
+	mov  flagAtualizaTop,0 ;mete a flag a 0 para dizer que não é preciso atualizar o top
+
+	jmp PRINT_LINHA ;repete o ciclo 
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TOP 10 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	
+	Teste:
  
     jmp CICLO_CURSOR
  
 
-
-GAMEOVER:
-
-		call APAGA_ECRAN
-  		lea     dx, MFim
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GAME OVER ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
-		mov ah, 09h
+	GAMEOVER: ;execução salta para aqui quando o tempo se esgota (segundos =0)
+
+		call APAGA_ECRAN ;limpa o ecra
+
+  		lea dx, MFim ;apresenta a mensagem de fim de jogo
+	
+		mov ah, 09h 
+
 		int 21h
 
-		
-		mov cx,10
-		mov bx,100
 
-	
-		LER_INPUT:
-				
-				xor ax, ax
-				
-				mov ah, 07h
-				
-				int 21h
-
+		;~~~~~~~~~~~~~~~~~~~~~~ Ciclo para limpar ultimo nome do vetorNomes ~~~~~~~~~~~~~~~~~~~~~~
 		
-				cmp al,13
-				
-				je sai
+		mov cx,11  ;mete 11 no cx para executar o ciclo 11 vezes
+		mov bx,100 ; copia 100 para bx para aceder ao ultimo nome no vetorNomes
+
+		limpaFIM: ;este ciclo limpa os ultimos 10 caracteres do vetorNomes para meter o novo nome
 			
-				cmp al, 8
-				je backspace
-				
-				mov vetorNOMES[bx+1], al
-				mov dl, vetorNOMES[bx+1]
+			mov vetorNOMES[bx],0 ;apaga efectivamente o caracter no vetor
 
-				mov ah, 02h
+			inc bx ;incrementa o bx para andar para a frente no vetor
+
+			loop limpaFIM ;ocorre enqanto cx >0
+
+		;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		;~~~~~~~~~~ Ciclo para Ler input do utilizador e meter no ultimo nome do vetorNomes~~~~~~~
+		
+		mov bx,100  ; copia 100 para bx para aceder ao ultimo nome no vetorNomes
+		mov cx ,10	; mete 10 no cx para executar o ciclo 10 vezes
+
+		LER_INPUT:  ;este ciclo insere caracter a caracter no fim do vetorNomes
 				
+				xor ax, ax ;limpa ax apara evitar erros
+				
+				mov ah, 07h ; Ler input do utilizador
+				int 21h		;
+
+		
+				cmp al,13	;verifica se a tecla é enter 
+				je sai		;se for Enter , significa que o nome foi introduzido, logo acaba o ciclo
+			
+				cmp al, 8	 ;verifica se a tecla é backspace
+				je backspace ;salta para bloco de código 'backspace'
+				
+				;caso nao seja introduzida nenhuma das anteriores, continua a execução do código
+			
+				mov vetorNOMES[bx+1], al ;mete o valor introduzido na posição atual do vetorNomes
+				mov dl, vetorNOMES[bx+1] ;mete o valor no vetor em dl
+
+				mov ah, 02h ;imprime o caracter em ah no ecra para o utilizador saber o que escreveu
 				int 21h
 
-				inc bx
-				dec cx
+				inc bx ;  incrementa o bx para passar à proxima posição do array
+				dec cx ;  decrementa o cx por causa do ciclo
 
-				jmp pula
-				backspace:
+				jmp pula	;pula, para evitar a execução do bloco de código 'backspace'
+
+				backspace:	;este código executa se o utilizador carregar em backspace
 				
-					mov dl, 8	
+					mov dl, 8	 ;imprime o backspace no ecra para voltar atrás no ecra(criar o efeito visual)
 					mov ah, 02h
 				
-				int 21h
-				mov vetorNOMES[bx],0
-				
-			
-				dec bx 
-				
-				pula:
+					int 21h
 
-		cmp cx, 0
-		jne LER_INPUT
+					mov vetorNOMES[bx],0 ; volta à posição anterior do array e apaga o código ascii do backspace que lá foi colocado
+			
+					dec bx ;decrementa o bx para voltar atrás (como se nao tivesse sido introduzido o 'backspace')
+				
+				pula: ;vem para aqui caso nao tenha sido executado o bloco de código 'backspace'
+				
+				cmp cx, 0 ; compara se já foram lidos 10 caracteres do teclado
+				
+				jne LER_INPUT ;caso nao tenham sido, volta ao ciclo 'LER_INPUT'
+		
+		;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		
 		sai:
 		
-		mov ah,07h
+		mov bx,10 ; mete o valor 10
 
-		int 21h		
+		mov dl, pontuacao ;mete o valor da pontuação atual em dl
 
-		
-		mov bx,10
-		
-		mov dl, pontuacao
+		mov vetorPONTOS[bx],dl ;copia para a última posição do vetor os novos pontos 
 
-		mov vetorPONTOS[bx],dl
-		mov dl, 60
-		mov vetorTEMPOS[bx],dl
-		mov  flagAtualizaTop,1
-		jmp CICLOMENU
+		mov dl, 60	;mete em dl 60 (tempo da jogada)
 
+		mov vetorTEMPOS[bx],dl	;copia para a ultima posição do vetor de tempos, o novo tempo
+
+		mov  flagAtualizaTop,1  ;mete a flag 'flagAtualizaTop' para os vetores serem atualizados na proxima execução do top 10
+
+		jmp TOP_10  ;salta para o top 10
 
 
-CARREGA_PONTUACAO:
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~ABRIR FICHEIROS DOS RESULTADOS~~~~~~~~~~~~~~~~~~~~~~~
+
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FICHEIRO PONTOS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+open_fich_pontos proc
+
+        mov     ah,3dh			; vamos abrir ficheiro para leitura 
+        mov     al,0			; tipo de ficheiro	
+        lea     dx,	fPontos	; nome do ficheiro
+        int     21h			; abre para leitura 
+        jc      erro_abrir_pontos		; pode aconter erro a abrir o ficheiro 
+        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
+        jmp     ler_ciclo_pontos		; depois de abero vamos ler o ficheiro 
+
+	erro_abrir_pontos:
+        mov     ah,09h
+        lea     dx,Erro_Open
+        int     21h
+    
+
+	ler_ciclo_pontos:
+       mov     ah,3fh			; indica que vai ser lido um ficheiro 
+        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
+        mov     cx,111		; numero de bytes a ler 
+        lea     dx,vetorPONTOS		; vai ler para o local de memoria apontado por dx (car_fich)
+        int     21h				; faz efectivamente a leitura
+		jc	    erro_ler_pontos		; se carry � porque aconteceu um erro
+		cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
+		je	    fecha_ficheiro_pontos	; se EOF fecha o ficheiro 
+    
+		mov     ah,02h			; coloca o caracter no ecran
+	    ;mov	    dl,vetor	; este � o caracter a enviar para o ecran
+	 
+	    int	    21h				; imprime no ecran
+	    jmp	    ler_ciclo_pontos		; continua a ler o ficheiro
+	
+	erro_ler_pontos:
+        mov     ah,09h
+        lea     dx,Erro_Ler_Msg
+        int     21h
+
+	fecha_ficheiro_pontos:		; vamos fechar o ficheiro 
+        mov     ah,3eh
+        mov     bx,HandleFich
+        int     21h
+
+          jnc  sai
+
+        mov     ah,09h			; o ficheiro pode no fechar correctamente
+        lea     dx,Erro_Close
+        Int     21h
+
+sai: ret
+
+open_fich_pontos ENDP
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FIM  FICHEIRO PONTOS ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	open_fich_tempos proc
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FICHEIRO TEMPOS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        mov     ah,3dh			; vamos abrir ficheiro para leitura 
+        mov     al,0			; tipo de ficheiro	
+        lea     dx,fTempo	; nome do ficheiro
+        int     21h			; abre para leitura 
+        jc      erro_abrir_tempos		; pode aconter erro a abrir o ficheiro 
+        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
+        jmp     ler_ciclo_tempos		; depois de abero vamos ler o ficheiro 
+
+	erro_abrir_tempos:
+        mov     ah,09h
+        lea     dx,Erro_Open
+        int     21h
+    
+
+	ler_ciclo_tempos:
+        mov     ah,3fh			; indica que vai ser lido um ficheiro 
+        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
+        mov     cx,11		; numero de bytes a ler 
+        lea     dx,vetorTEMPOS		; vai ler para o local de memoria apontado por dx (car_fich)
+        int     21h				; faz efectivamente a leitura
+		jc	    erro_ler_tempos		; se carry � porque aconteceu um erro
+		cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
+		je	    fecha_ficheiro_tempos	; se EOF fecha o ficheiro 
+    
+		mov     ah,02h			; coloca o caracter no ecran
+	  	;mov	    dl,vetor	; este � o caracter a enviar para o ecran
+	 
+	  	int	    21h				; imprime no ecran
+	  	jmp	    ler_ciclo_tempos		; continua a ler o ficheiro
+	
+	erro_ler_tempos:
+        mov     ah,09h
+        lea     dx,Erro_Ler_Msg
+        int     21h
+
+	fecha_ficheiro_tempos:					; vamos fechar o ficheiro 
+        mov     ah,3eh
+        mov     bx,HandleFich
+        int     21h
+    	  jnc    sai
+
+        mov     ah,09h			; o ficheiro pode n�o fechar correctamente
+        lea     dx,Erro_Close
+        Int     21h
+	sai:
+
+		RET
+
+	open_fich_tempos ENDP
+
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FIM FICHEIRO NOMES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	open_fich_nomes PROC
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FICHEIRO NOMES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        mov     ah,3dh			; vamos abrir ficheiro para leitura 
+        mov     al,0			; tipo de ficheiro	
+        lea     dx,fNomes	; nome do ficheiro
+        int     21h			; abre para leitura 
+        jc      erro_abrir_nomes		; pode aconter erro a abrir o ficheiro 
+        mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
+        jmp     ler_ciclo_nomes		; depois de abero vamos ler o ficheiro 
+
+	erro_abrir_nomes:
+        mov     ah,09h
+        lea     dx,Erro_Open
+        int     21h
+    
+
+	ler_ciclo_nomes:
+        mov     ah,3fh			; indica que vai ser lido um ficheiro 
+        mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
+        mov     cx,100		; numero de bytes a ler 
+        lea     dx,vetorNOMES		; vai ler para o local de memoria apontado por dx (car_fich)
+        int     21h				; faz efectivamente a leitura
+		jc	    erro_ler_nomes		; se carry � porque aconteceu um erro
+		cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
+		je	    fecha_ficheiro_nomes	; se EOF fecha o ficheiro 
+    
+		mov     ah,02h			; coloca o caracter no ecran
+	  	;mov	    dl,vetor	; este � o caracter a enviar para o ecran
+	 
+	  	int	    21h				; imprime no ecran
+	  	jmp	    ler_ciclo_nomes		; continua a ler o ficheiro
+	
+	erro_ler_nomes:
+        mov     ah,09h
+        lea     dx,Erro_Ler_Msg
+        int     21h
+
+	fecha_ficheiro_nomes:					; vamos fechar o ficheiro 
+        mov     ah,3eh
+        mov     bx,HandleFich
+        int     21h
+          jnc    sai
+
+        mov     ah,09h			; o ficheiro pode n�o fechar correctamente
+        lea     dx,Erro_Close
+        Int     21h
+	sai:
+	ret
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FIM FICHEIRO NOMES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+open_fich_nomes ENDP
+;~~~~~~~~~~~~~~~~~ FIM DE ABRIR FICHEIROS PONTOS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 	
-
-
-
-
-
+;~~~~~~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA GUARDAR FICHEIRO PONTOS ~~~~~~~~~~~~~~~~~~~~~~~~~~
 save_fich_pontos proc
-	
 	
 		mov		ah, 3ch				; Abrir o ficheiro para escrita
 		mov		cx, 00H				; Define o tipo de ficheiro ??
-		lea		dx, fPontos			; DX aponta para o nome do ficheiro 
+		lea		dx, fPontos		; DX aponta para o nome do ficheiro 
 		int		21h					; Abre efectivamente o ficheiro (AX fica com o Handle do ficheiro)
 		jnc		escreve_pontos				; Se não existir erro escreve no ficheiro
 	
@@ -1756,14 +1931,56 @@ save_fich_pontos proc
 		lea		dx, msgErrorCreate
 		int		21h
 	
-		
-
+	
 escreve_pontos:
+
 		mov		bx, ax				; Coloca em BX o Handle
     	mov		ah, 40h				; indica que é para escrever
     	
 		lea		dx, vetorPONTOS			; DX aponta para a infromação a escrever
-    	mov		cx, 240				; CX fica com o numero de bytes a escrever
+    	mov		cx, 11				; CX fica com o numero de bytes a escrever
+		int		21h					; Chama a rotina de escrita
+		jnc		close				; Se não existir erro na escrita fecha o ficheiro
+	
+		mov		ah, 09h
+		lea		dx, msgErrorWrite
+		int		21h
+close:
+		mov		ah,3eh				; fecha o ficheiro
+		int		21h
+		jnc sai
+	
+		mov		ah, 09h
+		lea		dx, msgErrorClose
+		int		21h
+sai:
+	ret
+
+save_fich_pontos ENDP
+
+;~~~~~~~~~~~~~~~~~~~~~~~~ FIM PROCEDIMENTO PARA GUARDAR FICHEIRO PONTOS ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA GUARDAR FICHEIRO PONTOS ~~~~~~~~~~~~~~~~~~~~~~~~~~
+save_fich_tempos proc
+
+	mov		ah, 3ch				; Abrir o ficheiro para escrita
+		mov		cx, 00H				; Define o tipo de ficheiro ??
+		lea		dx, fTempo	     	; DX aponta para o nome do ficheiro 
+		int		21h					; Abre efectivamente o ficheiro (AX fica com o Handle do ficheiro)
+		jnc		escreve_tempos				; Se não existir erro escreve no ficheiro
+	
+		mov		ah, 09h
+		lea		dx, msgErrorCreate
+		int		21h
+	
+	
+escreve_tempos:
+
+		mov		bx, ax				; Coloca em BX o Handle
+    	mov		ah, 40h				; indica que é para escrever
+    	
+		lea		dx, vetorTEMPOS		; DX aponta para a infromação a escrever
+    	mov		cx, 11				; CX fica com o numero de bytes a escrever
 		int		21h					; Chama a rotina de escrita
 		jnc		close				; Se não existir erro na escrita fecha o ficheiro
 	
@@ -1774,19 +1991,68 @@ close:
 		mov		ah,3eh				; fecha o ficheiro
 		int		21h
 		
-	
+		jnc sai
+
 		mov		ah, 09h
 		lea		dx, msgErrorClose
 		int		21h
+sai:
+	ret
+
+save_fich_tempos ENDP
+
+;~~~~~~~~~~~~~~~~~~~~~~~~ FIM PROCEDIMENTO PARA GUARDAR FICHEIRO PONTOS ~~~~~~~~~~~~~~~~~~~~~~~~
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA GUARDAR FICHEIRO PONTOS ~~~~~~~~~~~~~~~~~~~~~~~~~~
+save_fich_nomes proc
+	
+		mov		ah, 3ch				; Abrir o ficheiro para escrita
+		mov		cx, 00H				; Define o tipo de ficheiro ??
+		lea		dx, fNomes	     	; DX aponta para o nome do ficheiro 
+		int		21h					; Abre efectivamente o ficheiro (AX fica com o Handle do ficheiro)
+		jnc		escreve_nomes				; Se não existir erro escreve no ficheiro
+	
+		mov		ah, 09h
+		lea		dx, msgErrorCreate
+		int		21h
+	
+	
+escreve_nomes:
+
+		mov		bx, ax				; Coloca em BX o Handle
+    	mov		ah, 40h				; indica que é para escrever
+    	
+		lea		dx, vetorNOMES			; DX aponta para a infromação a escrever
+    	mov		cx, 100				; CX fica com o numero de bytes a escrever
+		int		21h					; Chama a rotina de escrita
+		jnc		close				; Se não existir erro na escrita fecha o ficheiro
+	
+		mov		ah, 09h
+		lea		dx, msgErrorWrite
+		int		21h
+close:
+		mov		ah,3eh				; fecha o ficheiro
+		int		21h
+		
+		jnc sai
+
+		mov		ah, 09h
+		lea		dx, msgErrorClose
+		int		21h
+sai:
+	ret
+save_fich_nomes ENDP
+
+;~~~~~~~~~~~~~~~~~~~~~~~~ FIM PROCEDIMENTO PARA GUARDAR FICHEIRO PONTOS ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 FIM:
 	
-    MOV AH,4Ch
-    INT 21h
-
-save_fich_pontos ENDP
-
-FIM:
+	call save_fich_nomes
 	call save_fich_pontos
+	
+	call save_fich_tempos
+	
     MOV AH,4Ch
     INT 21h
 PRINC ENDP
