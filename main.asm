@@ -607,7 +607,7 @@ TRATA_HORAS_JOGO PROC
 	cmp 	segundos, 0
 	je 		MensagemFim
 
-	CALL 	LER_TEMPO_JOGO				; Horas MINUTOS e segundos do Sistema
+	CALL 	LER_TEMPO_JOGO		; Horas MINUTOS e segundos do Sistema
 	
 	MOV		AX, contaSeg
 	cmp		AX, Old_seg			; Verifica se os segundos mudaram desde a ultima leitura
@@ -700,25 +700,25 @@ READ_INPUT PROC
 		mov si,0
 		mov cx,10
 
-		LIMPAR_BUFFER:  ;limpar a string para minimizar erros
+		LIMPAR_BUFFER:          ;limpar a string para minimizar erros
 
 			mov fichTemp[si],0
 			inc si
 			loop LIMPAR_BUFFER
 
 		mov bx,-1
-		LER_NOME_FILE:  ;este ciclo insere caracter a caracter no fim do vetorNomes
+		LER_NOME_FILE:         ;este ciclo insere caracter a caracter no fim do vetorNomes
 				
-			xor ax, ax ;limpa ax apara evitar erros
+			xor ax, ax         ;limpa ax apara evitar erros
 				
-			mov ah, 07h ; Ler input do utilizador
-			int 21h		;
-
-			cmp al, 27  ;se introduzir
+			mov ah, 07h        ; Ler input do utilizador
+			int 21h		       ;
+ 
+			cmp al, 27         ;se introduzir
 			je sai1
 
-			cmp al,13	;verifica se a tecla é enter 
-			je sai1		;se for Enter , significa que o nome foi introduzido enter, logo acaba o ciclo
+			cmp al,13	       ;verifica se a tecla é enter 
+			je sai1		       ;se for Enter , significa que o nome foi introduzido enter, logo acaba o ciclo
 			
 			cmp al, 8	 ;verifica se a tecla é backspace
 			je backspace1 ;salta para bloco de código 'backspace'
@@ -1280,72 +1280,66 @@ CONF_GRELH:
 
 jogar:
 
-	call APAGA_ECRAN
-		MOV		AX,0B800H
-		MOV		ES,AX
+	call APAGA_ECRAN   ;apaga o ecra 
 
-	 cmp flagBonusDup,1
-	 je jogar_Bonus
-         cmp carregado , 1	;verifica se o jogo foi carregado
-		je jogarCarregado	;salta para carregar jogo
+	MOV		AX,0B800H  ;incializa  a mem de video
+	MOV		ES,AX
 
-		cmp editor,0
-		je salto5
+	cmp flagBonusDup,1 ;verifica se o bonus está ativo
+	je jogar_Bonus
+    
+	cmp carregado , 1	;verifica se o jogo foi carregado
+	je jogarCarregado	;salta para carregar jogo
+
+	cmp editor,0		;verifica se estamos no modo de edição
+	je salto5			;vai para o salto5
 		
-		cmp editarAberto,0  
-		je Edita_jogar  
+	cmp editarAberto,0  ;caso esteja no modo de editar o tabuleiro aberto
+	je Edita_jogar  
 		
-		cmp editarAberto,0
-		jne salto5
-		Edita_jogar:
-
+	cmp editarAberto,0	;caso nao se verificam 
+	jne salto5
 	
-   call apaga_ecran
-	lea     dx, layoutEditor
-	mov     ah, 09h
-	int     21h
-	mov segundos,60
-	mov editor,1
-	jmp salto5
+	Edita_jogar:
+		call apaga_ecran
+		lea     dx, layoutEditor
+		mov     ah, 09h
+		int     21h
+		mov segundos,60
+		mov editor,1
+		jmp salto5
 	
-		salto6:
-			call APAGA_ECRAN
-			mov editor,1
-			lea     dx, layoutEditor
-			mov     ah, 09h
-			int     21h
-			mov segundos,60
-			jmp salto2
+	salto6:
+		call APAGA_ECRAN
+		mov editor,1
+		lea     dx, layoutEditor
+		mov     ah, 09h
+		int     21h
+		mov segundos,60
+		jmp salto2
 
-		
-	
-		salto5:
-		
-		;caso nao esteja ativo o modo de ediçãça0
- 		lea     dx, jogo
+	salto5:  ;caso nao esteja ativo o modo de ediçãça0
+		lea     dx, jogo
 		mov     ah, 09h
 		int     21h
 		mov pontuacao,0
    		mov Segundos, 60 ; iniciou o jogo
-		
-		jmp salto2
+		jmp salto2       ;inicio o jogo normamente
 
-		jogar_Bonus:
+	jogar_Bonus:
 		lea     dx, PagJogarBonus
 		mov     ah, 09h
 		int     21h
 		mov pontuacao,0
    		mov Segundos, 60 ; iniciou o jogo
 
-		salto2:
+	salto2:
 
 		mov iniX, 60
 		mov iniY,8
 		mov tamX ,9
 		mov tamY,6
-
 		goto_xy  20,20
-	
 	    mov cx,10       ; Faz o ciclo 10 vezes
 		xor si,si 
 
@@ -1397,15 +1391,9 @@ novacor:
         inc bx
         inc bx
 
-;--------- Copiar para o vetor  -------------------------		
-        ;--- Retifica cor de fundo
-		mov ah,cl ; PASSAR CL PARA AH PARA O CICLO N�O MORRER
-		; mov cl, 4 ; PARA FAZER O ROR TEM DE SR COM CL
-		; ror al, cl
-		
-		; add al, 48
-		;--- Retifica cor de fundo
-	  
+;~~~~~~~~~~~COPIA PARA O VETOR ~~~~~~~~~	
+        
+		mov ah,cl 
         mov vetor[si], al 
 		inc si
 
@@ -1413,7 +1401,8 @@ novacor:
 		inc si
 
 	    mov cl,ah
-;--------- Copiar para o vetor------------------------		
+
+;~~~~~~~~~~~COPIA PARA O VETOR ~~~~~~~~~	
 		
         mov di, 1      ;delay de 1 centesimo de segundo
         call    delay
@@ -1424,70 +1413,66 @@ novacor:
         mov al, tamY
         cmp al, 0       ; verifica se j� desenhou todas as linhas
         jne ciclo2      ; se ainda h� linhas a desenhar continua
-; ---- !TABULEIRO ---
 
-; ---- CURSOR ---
-    goto_xy     iniY,POSy   ; Vai para nova possi��o
-    mov     ah, 08h ; Guarda o Caracter que est� na posi��o do Cursor
-    mov     bh,0        ; numero da p�gina
-    int     10h        
-    mov     Car, al ; Guarda o Caracter que est� na posi��o do Cursor
-   ; mov     Cor, ah ; Guarda a cor que est� na posi��o do Cursor
-    ;--- Retifica cor de fundo
-	mov cl, 4 ; PARA FAZER O ROR TEM DE SR COM CL
-	ror ah, cl
+
+    	goto_xy     iniY,POSy   ; Vai para nova possi��o
+    	mov     ah, 08h ; Guarda o Caracter que est� na posi��o do Cursor
+    	mov     bh,0        ; numero da p�gina
+    	int     10h        
+    	mov     Car, al ; Guarda o Caracter que est� na posi��o do Cursor
+   		; mov     Cor, ah ; Guarda a cor que est� na posi��o do Cursor
+   		
+		;~~~~~~~~~ Retificar a cor de fundo~~~~~~~~~~
+		mov cl, 4   ; ror tem que ser em cl
+		ror ah, cl  ; desloca o bit menos significativo
+		;~~~~~~~~~ Retificar a cor de fundo~~~~~~~~~~
+		add ah, 48
+		mov Cor, ah ; Guarda a cor que est� na posi��o do Cursor
 		
-	add ah, 48
-	mov Cor, ah ; Guarda a cor que est� na posi��o do Cursor
-	;--- Retifica cor de fundo
    
    
-    inc     POSx
-    goto_xy     POSx,POSy   ; Vai para nova possi��o2
-    mov         ah, 08h     ; Guarda o Caracter que est� na posi��o do Cursor
-    mov     bh,0        ; numero da p�gina
-    int     10h        
-    mov     Car2, al    ; Guarda o Caracter que est� na posi��o do Cursor
-    ;ov     Cor2, ah    ; Guarda a cor que est� na posi��o do Cursor
-	;--- Retifica cor de fundo
-	mov cl, 4 ; PARA FAZER O ROR TEM DE SR COM CL
-	ror ah, cl
+   		inc     POSx
+   	 	goto_xy     POSx,POSy   ; Vai para nova possi��o2
+    	mov         ah, 08h     ; Guarda o Caracter que est� na posi��o do Cursor
+    	mov     bh,0        ; numero da p�gina
+    	int     10h        
+    	mov     Car2, al    ; Guarda o Caracter que est� na posi��o do Cursor
+    	;mov     Cor2, ah    ; Guarda a cor que est� na posi��o do Cursor
 		
-	add ah, 48
-	mov Cor2, ah ; Guarda a cor que est� na posi��o do Cursor
-	;--- Retifica cor de fundo
-    dec     POSx
+		;~~~~~~~~~ Retificar a cor de fundo~~~~~~~~~~
+		mov cl, 4  ; ror tem que ser em cl
+		ror ah, cl ; desloca o bit menos significativo
+		;~~~~~~~~~ Retificar a cor de fundo~~~~~~~~~~
+		add ah, 48
+		mov Cor2, ah ; Guarda a cor que est� na posi��o do Cursor
+   		dec     POSx
 
 jmp CICLO_CURSOR
 
 
-jogarCarregado:
+jogarCarregado:   ;inicia o jogo de um tabuleiro carregado
 
-		call APAGA_ECRAN
-		cmp editarAberto,0
-		je editarCarregado
-
-		;caso nao esteja ativo o modo de edição
-		mov editor,0
- 		lea     dx, jogo
-		mov     ah, 09h
-		int     21h
-		mov pontuacao,0
-   		mov Segundos, 60 ; iniciou o jogo
+		call APAGA_ECRAN		;apaga o ecra
+		cmp editarAberto,0      ;verifica se 
+		je editarCarregado      
+		mov editor,0            ;garante que nao está no modo de edição
+ 		lea dx, jogo            ;mostra a string do jogo
+		mov ah, 09h
+		int 21h
+		mov pontuacao,0			;faz reset da pontuação
+   		mov Segundos, 60 		;dá 60segundos de tempo
 		jmp CICLO_CURSOR
 
 editarCarregado:
 
-	mov editor,1
-
-
-			call APAGA_ECRAN
-			mov editor,1
-			lea     dx, layoutEditor
-			mov     ah, 09h
-			int     21h
-			mov segundos,60
-			jmp CICLO_CURSOR
+		mov editor,1
+		call APAGA_ECRAN
+		mov editor,1
+		lea     dx, layoutEditor
+		mov     ah, 09h
+		int     21h
+		mov segundos,60
+		jmp CICLO_CURSOR
 
 
 CICLO_CURSOR:       
@@ -1519,9 +1504,7 @@ CICLO_CURSOR:
 			
 		add ah, 48
 		mov Cor, ah ; Guarda a cor que est� na posi��o do Cursor
-		;--- Retifica cor de fundo
-       
-
+	   
         inc     POSx
         goto_xy     POSx,POSy   ; Vai para nova possi��o
         mov         ah, 08h
@@ -1530,44 +1513,35 @@ CICLO_CURSOR:
         mov     Car2, al    ; Guarda o Caracter2 que est� na posi��o do Cursor2
         ;mov     Cor2, ah    ; Guarda a cor que est� na posi��o do Cursor2
         
-		;--- Retifica cor de fundo
-		mov cl, 4 ; PARA FAZER O ROR TEM DE SR COM CL
 	
-		ror ah, cl
+		;~~~~~~~~~ Retificar a cor de fundo~~~~~~~~~~
+		mov cl, 4  ; ror tem que ser em cl
+		ror ah, cl ; desloca o bit menos significativo
+		;~~~~~~~~~ Retificar a cor de fundo~~~~~~~~~~
 			
 		add ah, 48
 		
-		
-		;mov Cor2, ah ; Guarda a cor que est� na posi��o do Cursor
-		;--- Retifica cor de fundo
 		dec     POSx
        
-	;      goto_xy     0,0        ; Mostra o caractr que estava na posi��o do AVATAR
-	;      mov     ah, 02h         ; IMPRIME caracter da posi��o no canto
- 	;      mov     dl, Car
- 	;      int     21H        
+		;      goto_xy     0,0        ; Mostra o caractr que estava na posi��o do AVATAR
+		;      mov     ah, 02h         ; IMPRIME caracter da posi��o no canto
+ 		;      mov     dl, Car
+ 		;      int     21H        
 		
-
-		cmp flagBonusDup,1
-		jne salto9
-
-			goto_xy 73,4
-			PRINT_NUMERO count_escolhido
+		cmp flagBonusDup,1    ;verifica se o bonus está ativo, se estiver, imprime o numero
+		jne salto9            ;salta se nao for verdade
+		goto_xy 73,4
+		PRINT_NUMERO count_escolhido
 
 		salto9:
-		
-		cmp editor ,1
-		
-		je salto4
-	
-		mostra_pont pontuacao
+			cmp editor ,1     ;se o editor estiver aberto, n mostra a pontuação
+			je salto4
+			mostra_pont pontuacao
 		
 		salto4:
-
-        goto_xy     POSx,POSy   ;Vai para posi��o do cursor
-
-		cmp al,113
-		je FIM
+			goto_xy     POSx,POSy   ;Vai para posi��o do cursor
+			cmp al,113
+			je FIM
 		        
 
 IMPRIME:    
@@ -1590,63 +1564,58 @@ IMPRIME:
         mov     al, POSy    ; Guarda a posição do cursor
         mov     POSya, al
 
-
-
    
 LER_SETA: ;ciclo que está sempre a executar e le a input do utilizador
 
 		cmp fimTempo,1 ;verifica se o tempo já chegou ao fim 
 		
 		je GAMEOVER    ;se o tempo acabou, salta para O GAMEOVER
+		
 		cmp editor,1
 		jne salto8
-		call  atualizaTabuleiro ; atualiza o ecrã com o vetor de cores em memória 
-		salto8:
-		call      LE_TECLA
-
-
-		cmp     ah, 1
-        je      ESTEND
-     
-
-       	cmp AL,52   
-		je MENU_PRINCIPAL
- 
-		cmp editor,1
-		je MUDACOR
-
-		cmp AL, 32
-		je OLHAEXPLOSAO
-
-		cmp AL, 13
-		je OLHAEXPLOSAO
 		
-        
+		call  atualizaTabuleiro ; atualiza o ecrã com o vetor de cores em memória 
+		
+		salto8:
+			call      LE_TECLA
+			cmp     ah, 1
+       		je      ESTEND
+     		cmp AL,52   
+			je MENU_PRINCIPAL
+
+ 			cmp editor,1	  ;se o modo de edicao estiver aberto
+			je MUDACOR
+
+			cmp AL, 32        ;se carregar no espaço 
+			je OLHAEXPLOSAO
+
+			cmp AL, 13        ;se carregar no enter
+			je OLHAEXPLOSAO
+		
         jmp     LER_SETA
 
-INCREMENTA_MEIO:
+INCREMENTA_MEIO:   ;incrementa se explodir a peça atual do cursor
 
 		inc pontuacao
 		mov explodiuMeio,0
 		jmp OLHAEXPLOSAO
 
-OLHAEXPLOSAO:
+
+OLHAEXPLOSAO:	 ;a execução do programa vem para aqui, caso carregue no enter 
 	
 		cmp explodiuMeio,1
 		je INCREMENTA_MEIO
 
-		mov ax, 18
-
+		;calcula a posição dentro do tabuleiro
+		mov ax, 18	
 		mov cl, POSy_in
 		mul cl
-	
 		add bx,ax
-
 		mov ax,2
 		mov cl, POSx_in
 		mul cl
 		add bx, ax
-
+		;calcula a posição dentro do tabuleiro
 
 		jmp EXPLODE_DIR_F
 
@@ -1667,45 +1636,45 @@ MUDACOR:
 		cmp al,27			;caso pressione ESC
 		je termina
 		
-
-		
 		jmp LER_SETA
 		
-		Termina:
-		mov editor,0
-		je SAVE
+		Termina: ;guarda o tabuleiro
+			mov editor,0 
+			je SAVE
 
 		jmp LER_SETA
-METECOR:
+
+
+METECOR:    ;mete uma cor aleatória
 		
+		;calcula a posição dentro do tabuleiro
 		xor bx,bx 
-
 		mov ax, 18
-
 		mov cl, POSy_in
 		mul cl
-	
 		add bx,ax
-
 		mov ax,2
 		mov cl, POSx_in
 		mul cl
 		add bx, ax
+		;calcula a posição dentro do tabuleiro
 
+		;calcula cor aleatória
 		call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
         pop ax ;        ; Vai buscar 'a pilha o n�mero aleat�rio
-        and al,01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
-        cmp al, 0       ; Se o fundo de ecran � preto
-		je METECOR
+        and al,01110000b   ; posição do ecran com cor de fundo aleat�rio e caracter a preto		
+        cmp al, 0       ; Se o fundo de ecran é preto
+		je METECOR   ;volta a executar
+		;calcula cor aleatória
 		
-		mov vetor[bx],al
-		mov vetor[bx+1],al
+		mov vetor[bx],al		;Mete a nova cor na posição do cursor
+		mov vetor[bx+1],al		;
 	
 		jmp LER_SETA
 
 EXPLODE_DIR_F:
 
-		goto_xy     50,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
+		goto_xy     50,0       
         mov bonus, 0
 		mov al, vetor[bx]
 
@@ -2081,67 +2050,81 @@ explodePos:
 ESTEND:     
 		cmp  al,48h
         jne  BAIXO
-        mov ah,iniTabY
-        cmp ah,POSy
-        je Teste
-        dec     POSy        ;cima
-		dec POSy_in
-        jmp     CICLO_CURSOR ;repor as cenas
+        
+		mov ah,iniTabY    ;verifica se chegou ao inicio do top do tabuleiro
+        cmp ah,POSy		  ;
+       
+	    je CICLO_CURSOR	  ;caso tenha chegado ao inicio do tabuleiro, volta a fazer o ciclo
+
+        dec     POSy      ;decrementa as posições do cursor no tabuleiro 
+		dec POSy_in		  ;
+       
+	    jmp     CICLO_CURSOR ;repor as cenas
  
  
 BAIXO:     
         cmp     al,50h
         jne     ESQUERDA
                 		
-        mov ah,iniTabY
-        add ah,5 ;;limite inferior
-        cmp ah,POSy
-        je Teste
-        inc         POSy        ;Baixo
-		inc POSy_in
-        jmp     CICLO_CURSOR
+        mov ah,iniTabY  
+        add ah,5 	    ;calcula o fim do tabuleiro
+      
+	    cmp ah,POSy     ;verifica se chegou ao inicio do top do tabuleiro
+        je CICLO_CURSOR
+      
+	    inc POSy        ;incrementa POSy para andar para baixo
+		inc POSy_in     ;
+
+        jmp CICLO_CURSOR
  
+
 ESQUERDA:
+
         cmp     al,4Bh
         jne     DIREITA
-        mov ah,iniTabX
-        cmp ah,POSx
-        je Teste
-        dec     POSx        ;Esquerda
-        dec     POSx        ;Esquerda
-		dec     POSx_in       ;Esquerda
-        jmp     CICLO_CURSOR ;repor as cenas
+
+        mov ah,iniTabX 
+        cmp ah,POSx       ;compara a posicao com o inicio do tabuleiro
+	    je CICLO_CURSOR   ;caso seja igual, volta a executar ciclo
+
+        dec     POSx        ;decrementa 2 vezes (1 quadrado = 2 )
+        dec     POSx        
+		dec     POSx_in       
+        
+		jmp     CICLO_CURSOR 
  
  
 DIREITA:
       
         mov ah,iniTabX
-        add ah,16 ;; posiscao x[8] -> 16 cursor ocupa dois espacos
+        add ah,16  			;8*2
         cmp ah,POSx
-        je Teste
-        inc     POSx        ;Direita
-        inc     POSx        ;Direita
-		inc     POSx_in        ;Direita
-        jmp     CICLO_CURSOR ;repor as cenas
+		je CICLO_CURSOR
+
+        inc     POSx        ;incrementa 2 vezes (1 quadrado = 2 )
+        inc     POSx       
+		inc     POSx_in      
+
+        jmp     CICLO_CURSOR 
 
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~CICLO PARA DESCER PEÇAS~~~~~~~~~~~~~~~~~~
 CICLOLIMPATABUL:
     
-	cmp indiceVetor,0
+	cmp indiceVetor,0      ;ve se já chegou ao fim
 	je LER_SETA
 
-	mov cl, POSy_in
-	mov count,cl
+	mov cl, POSy_in		   
+	mov count,cl		   ;copia para o count o numeor de vezes que o cilco vao acontecer 
 
-	mov bx, indiceVetor
+	mov bx, indiceVetor	   ;mete em bx a posição atual no tabuleiro	 
 
-	cmp vetor[bx-1],0
-	PUSH bx
-	je PUXA_COL	
+	cmp vetor[bx-1],0	   ;verifica se a posição atual é preto
+	PUSH bx				   ;guarda o valor e bx na pilha
+	je PUXA_COL			   ;puxa a coluna 
 	
-	dec indiceVetor
-	dec indiceVetor
+	dec indiceVetor		   ;dec o indice do vetor, para andar para o quadrado anterior
+ 	dec indiceVetor
 	
 	jmp CICLOLIMPATABUL
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~CICLO PARA DESCER PEÇAS~~~~~~~~~~~~~~~~~~
@@ -2149,28 +2132,30 @@ CICLOLIMPATABUL:
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PUXA COLUNA~~~~~~~~~~~~~~~~~~~~~~~~
 PUXA_COL:
 
-	push bx
-	call atualizaTabuleiro
+	push bx                  ;guarda o valor de BX
+	call atualizaTabuleiro   ;atualiza o tabuleiro
 	
-	mov di,delayPuxaCol
-	
+	mov di,delayPuxaCol		 ;mete o valor do delay em di para usar no procedimento
 	call delay
-	call atualizaTabuleiro
-	pop bx
+
+	call atualizaTabuleiro	;atualiza o tabuleiro para ser visivel o delay
+
+	pop bx					;recupera o valor de BX
 	xor dx,dx
 	xor ax,ax
-	cmp count,0
+	
+	cmp count,0				;verifica se chegou à primeira coluna
 	je COR_CIMA
 
-
-	mov al, vetor[bx-19]
-	mov ah, vetor[bx-20]
-	mov vetor[bx-2],al
-	mov vetor[bx-1],ah
+	mov al, vetor[bx-19]	;guarda o valor do quadrado em cima
+	mov ah, vetor[bx-20]	;
 	
-	dec count
+	mov vetor[bx-2],al		;mete o quadrado atual com a cor do de cima
+	mov vetor[bx-1],ah		;
 	
-	sub bx,18
+	dec count				;reduz o numero de vezes que vai ocorrer o ciclo
+	
+	sub bx,18				;reduz o valor de bx em 18 para andar para a linha de cima
 	jmp PUXA_COL
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PUXA COLUNA~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2186,9 +2171,10 @@ COR_CIMA:
         je  COR_CIMA     ; vai buscar outra cor
 
     
-	mov vetor[bx-1], al  
-	mov vetor[bx-2], al
-	POP bx
+		mov vetor[bx-1], al  	;mete a nova cor na primeira linha  do tabuleiro
+		mov vetor[bx-2], al		;
+
+		POP bx ;restaura o valor de bx
 	
 	
 	jmp CICLOLIMPATABUL
