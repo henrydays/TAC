@@ -3,7 +3,19 @@
 .STACK 2048
  
 DADOS   SEGMENT PARA 'DATA'
+	
+	 caracter_bonus db 0
+	 cor_bonus db 0
+	 offset_bonus dw 0 ;tem que ser dw porque pode ser negativo
+	igualBonus db 0 ; guarda o valor da comparação (se caracter e cor são iguais)
+	
 
+	delayPuxaCol dw 10
+	eyes db ':'
+	flagBonusDup db 0
+
+	carregado db 0
+	editarAberto  db 0
 	fichTemp db '1',0
  	flagAtualizaTop db 0 ;variavel que diz se é preciso atualizar o top ou não
 
@@ -54,8 +66,8 @@ DADOS   SEGMENT PARA 'DATA'
 		nlinha db 5
 		aux db 0
 		aux2 db 0
-		plus db '+'
-		minus db '-'
+		plus db ')'
+		minus db '('
 		bonus db 0
     ; --- !DADOS PRINCIPAIS ---
    
@@ -118,8 +130,8 @@ DADOS   SEGMENT PARA 'DATA'
  		db "																	     ",10,13
 		db "																	     ",10,13
 		db " 		1 - Geracao de Grelha de Forma Aleatori						     ",10,13
-		db "		2 - Carregar Grelha											     ",10,13 
-		db "																	     ",10,13
+		db "		2 - Jogar grelha aleatoria com bonus						     ",10,13
+		db "		3 - Carregar Grelha											     ",10,13 
 		db "		4 - Voltar													     ",10,13
 		db "																	     ",10,13
 		db "		Digite um numero... $											 ",10,13
@@ -139,12 +151,11 @@ TOP10 db" ",10,13
 	Jogo db " ",10,13
 
  	db "  			",10,13
-	db "     TEMPO RESTANTE:					         ",10,13
+	db "     TEMPO RESTANTE:					              ",10,13
 	db "  ",10,13
 	db "     PONTUACAO:									      				 ",10,13
 	db "			    		 												 ",10,13
 	db "			   		  						   						  	 ",10,13
-	
 	db "																	     ",10,13
 	db "																	     ",10,13
 	db "		 													   			 ",10,13
@@ -152,7 +163,6 @@ TOP10 db" ",10,13
 	db "																	     ",10,13
 	db "________________________________________________________________________________ ",10,13
 	db "		A explosao das pecas com simbolos duplica os pontos			     ",10,13
-
 	db "$",10,13
 	
 	
@@ -162,10 +172,9 @@ TOP10 db" ",10,13
 	db "  ",10,13
 	db "    ESC para guardar e sair								      				 ",10,13
 	db "    4 para sair sem guardar		    		 					 	 ",10,13
-		db "  						",10,13
+	db "  						",10,13
 	db "   					         ",10,13
 	db "			   		  						   						  	 ",10,13
-	
 	db "																	     ",10,13
 	db "																	     ",10,13
 	db "		 													   			 ",10,13
@@ -212,7 +221,28 @@ TOP10 db" ",10,13
 	db "																	    		 ",10,13
 	db "					                ENTER para continuar		    		  	 ",10,13
 	db "							ESC   para sair								 	 ",10,13
-	db "$",10,13	
+	db "$",10,13
+
+
+	pagOpenOrCreate db " ",10,13
+
+ 	db "  																				 ",10,13
+	db "     		  	EDITAR TABULEIRO EXISTENTE OU CRIAR UM NOVO			  	    		 ",10,13
+	db "  																	   			 ",10,13
+	db "     		 Introduza o nome do ficheiro existente ou do novo 				   		 ",10,13
+	db "			    		 												 		 ",10,13
+	db "			   	formato: 'nome.txt'				   	    			 ",10,13
+	
+	db "________________________________________________________________________________ ",10,13
+	db "			Input limitada a 15 caracteres						       			 ",10,13
+	db "________________________________________________________________________________ ",10,13
+	db "																	    		 ",10,13
+	db "					                ENTER para continuar		    		  	 ",10,13
+	db "							ESC   para sair								 	 ",10,13
+	db "$",10,13
+
+
+
   	; --- !VARIAVEIS DE MSG DO MENU ---	
 
 	; ---- VARIAVEIS MOSTRA VETOR ---
@@ -363,36 +393,102 @@ MOSTRA MACRO STR
 	INT 21H
 ENDM
 
+compara_bonus PROC
+
+
+		xor ax,ax
+		xor cx,cx
+		mov cl,caracter_bonus
+		mov ch, cor_bonus
+	  	
+		mov al, 160
+
+		mul POSy
+		mov si, ax
+        mov ax,2
+		mul POSx
+		
+		add si, ax
+	
+        add si,offset_bonus
+		
+		cmp es:[si+1],ch
+		jne errado
+
+		cmp es:[si],cl
+		jne errado
+		mov igualBonus,1
+		jmp saiMacro
+
+		errado:  
+			mov igualBonus,0
+		saiMacro:
+		ret
+compara_bonus ENDP
+
 mostra_pont MACRO  pont
 	
+	xor dx,dx
 	mov ax,0
+
 	mov 	al,pontuacao
-	MOV 	bl, 10     
+	MOV 	bl, 100  
+	  
 	div 	bl
+
+    mov dl,al
+	mov dh,ah
+
 	add 	al, 30h				; Caracter Correspondente �s dezenas
 	add		ah,	30h				; Caracter Correspondente �s unidades
-	MOV 	STR12[0],al			; 
-	MOV 	STR12[1],ah
-	MOV 	STR12[2],0	
+	MOV 	STR12[0],al		; 
+
+	xor ax,ax
+	mov al,dh
+
+	mov bl,10
+	div bl
+	add 	al, 30h				; Caracter Correspondente �s dezenas
+	add		ah,	30h				; Caracter Correspondente �s unidades
+	MOV 	STR12[1],al			; 
+	MOV 	STR12[2],ah
 	MOV 	STR12[3],'$'
-	
+
 	GOTO_XY	22,4 ; posiçao ond evai ser imprimida a pontuação
 
 	MOSTRA	STR12 			
 		
 ENDM	
 
-PRINT_NUMERO MACRO Num
+PRINT_NUMERO MACRO pont
 	
 	xor ax,ax
-	mov 	al,num
-	MOV 	cl, 10     
+	xor dx,dx
+	mov ax,0
+
+
+	mov 	al,pont
+
+	MOV 	cl, 100
 	div 	cl
+	
+	mov dl,al
+	mov dh,ah
+
 	add 	al, 30h				; Caracter Correspondente �s dezenas
 	add		ah,	30h				; Caracter Correspondente �s unidades
-	MOV 	STR12[0],al			; 
-	MOV 	STR12[1],ah	
-	MOV Str12[2],0
+	MOV 	STR12[0],al		; 
+
+	xor ax,ax
+	mov al,dh
+
+	mov cl,10
+	div cl
+
+	add 	al, 30h				; Caracter Correspondente �s dezenas
+	add		ah,	30h				; Caracter Correspondente �s unidades
+	MOV 	STR12[1],al			; 
+	MOV 	STR12[2],ah
 	MOV 	STR12[3],'$'
 	MOSTRA	STR12 			
 	
@@ -540,7 +636,16 @@ LER_TEMPO_JOGO   ENDP
 
 READ_INPUT PROC
 
-mov bx,-1
+		mov si,0
+		mov cx,10
+
+		LIMPAR_BUFFER:
+
+			mov fichTemp[si],0
+			inc si
+			loop LIMPAR_BUFFER
+
+		mov bx,-1
 		LER_NOME_FILE:  ;este ciclo insere caracter a caracter no fim do vetorNomes
 				
 			xor ax, ax ;limpa ax apara evitar erros
@@ -596,6 +701,7 @@ READ_INPUT ENDP
 ;~~~~~~~~~~~~~~~~~ Procedimento para atualizar a mem de video com o vetor das cores ~~~~~~~~~~~
 atualizaTabuleiro proc
 	
+	
 	;~~~~~  mete tudo a 0 para evitar erros~~~~~ 
 	xor bx, bx
 	xor ax,ax
@@ -620,7 +726,8 @@ atualizaTabuleiro proc
 		
 		add bx, 160 ;adiciona 160bytes(andar uma linha na memória de video para baixo)
 		sub bx, 36	;subtrai (18*2 da linha anterior)
-		
+	
+      
 	mostrar:
 		
 	
@@ -656,16 +763,32 @@ atualizaTabuleiro proc
 		cmp editor,1; se o modo de edição estiver ativo
 		je sai		;nao coloca o bonus
 
+		cmp flagBonusDup,0
+		je sai
 		;~~~~~~~~~~Bonus duplicação ~~~~~~~~~~
-		mov al, plus
-		mov ah, minus
+		
+		mov dl,eyes
+		mov al, '('
+		mov ah, ')'
 
-	    mov bx, 1360
-        mov es:[bx], al  ;primeiro mais
-		mov es:[bx+172], al  ;segundo
-		mov es:[bx+310], ah  
-		mov es:[bx+642], al  
-		mov es:[bx+790], ah
+	    mov bx, 1356
+
+        mov es:[bx-10],	 dl  	;primeiro mais
+		mov es:[bx-12],ah
+		
+		mov es:[bx+174], dl  ;segundo
+		mov es:[bx+172],al
+
+		mov es:[bx+318], dl  
+		mov es:[bx+316],al
+
+		mov es:[bx+650],dl 
+		mov es:[bx+648],ah 	
+
+	
+		mov es:[bx+790],dl
+		mov es:[bx+788], al
+		
 
 		;~~~~~~~~~~Bonus duplicação ~~~~~~~~~~
 		
@@ -693,8 +816,10 @@ PRINC PROC
 	
 	MENU_PRINCIPAL:
 	
-		mov editor,0;mete o editor a 0
+		mov carregado,0
 
+		mov editor,0;mete o editor a 0
+		mov flagBonusDup,0
 		goto_xy 0,0 ;vai para o inicio do ecrã
 			
 		call APAGA_ECRAN ;limpa o ecrã
@@ -744,20 +869,29 @@ PRINC PROC
 			mov  ah, 07h ; Esperar que o utilizador digite um numero
             int  21h
             	
-			mov editor,0	;mete a flag que indica se está no modo de edição do tabuleiro a 0
+			mov editor,0	;mete a flag que indica se está no modo de edição do tabuleiro a 0	
+			mov editarAberto,1
 
 			cmp  al, 49   ; Se inserir 1
                 je Jogar  ; salta para o jogo
 
-			cmp  al, 50 ; Se inserir 2
+			cmp al, 50	;se inserir 2
+				je jogarBonus
+
+			cmp  al, 51 ; Se inserir 2
                 je SELECT_FILE  ;salta para a seleção do tabuleiro 	
+			
+
 			
 
             cmp al,52
                 je MENU_PRINCIPAL
 			
 			jmp MENU_JOGAR ;repete o ciclo, caso não ocorra nenhuma das opções anteriores
-			
+			jogarBonus:
+				mov flagBonusDup,1
+				jmp jogar
+
 		FORA: 
 			CMP AL, 27 ; TECLA ESCAPE
 			JE fim;
@@ -766,7 +900,14 @@ PRINC PROC
 
 SELECT_FILE: ;ecra para selecionar o ficheiro que queremos abrir 
 		
+	
+		
+		mov segundos,60
+			
+		mov fimTempo,0
+		
 		call APAGA_ECRAN
+		
 			lea     dx, pagOpenFile	; apresenta no ecrã a string do menu jogar
 			mov     ah, 09h		;
 			int     21h			;
@@ -775,20 +916,24 @@ SELECT_FILE: ;ecra para selecionar o ficheiro que queremos abrir
 
 		goto_xy 26,21
 		PRINT_CAR 175
+
 		goto_xy 27,21	
 
 		call READ_INPUT
 		
-		mov editor,0
+		cmp al, 27
+		je MENU_JOGAR
 		
-		mov segundos,50
-			
-		mov fimTempo,0
 
 		jmp OPEN_FILE
 
-
 jmp SELECT_FILE
+
+carregaJogo:
+
+	mov editor,0
+	mov carregado,1
+	jmp jogar
 
 OPEN_FILE:
         mov     ah,3dh			; vamos abrir ficheiro para leitura 
@@ -807,7 +952,7 @@ ler_ciclo:
         int     21h				; faz efectivamente a leitura
 		jc	    erro_ler		; se carry � porque aconteceu um erro
 		cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
-		je	    fecha_ficheiro	; se EOF fecha o ficheiro 
+		je	    carregaJogo
     
 		mov     ah,02h			; coloca o caracter no ecran
 	  ;mov	    dl,vetor	; este � o caracter a enviar para o ecran
@@ -820,41 +965,43 @@ erro_ler:
 		
         lea     dx,Erro_Ler_Msg
         int     21h
-		
-
-JogaCarregado:
-
-		mov  Segundos,60
-		call APAGA_ECRAN
-		call atualizaTabuleiro
-		call CICLO_CURSOR
-
 
 fecha_ficheiro:					; vamos fechar o ficheiro 
         mov     ah,3eh
         mov     bx,HandleFich
         int     21h
-        jnc     JogaCarregado
+
+        jnc     IniciaEdicaoAberto
 
         mov     ah,09h			; o ficheiro pode n�o fechar correctamente
         lea     dx,Erro_Close
         Int     21h
+
+IniciaEdicaoAberto:
+		mov 	editarAberto,0
+		mov  editor,1
+		jmp jogar
 erro_abrir:
 		
 		call APAGA_ECRAN
         mov     ah,09h
         lea     dx,Erro_Open
         int     21h
-        
 		mov ah, 07h
 		int 21H
 		jmp SELECT_FILE
 
-EDITOR_TABUL:
+;~~~~~~~~~~~~~~~~~~~~~~~ Abrir ficheiro do tabuleiro ~~~~~~~~~~~~~~~~~~~
+OPEN_OR_CREATE:
 
+		mov editor,1
 		
+		mov segundos,60
+			
+		mov fimTempo,0
+
 		call APAGA_ECRAN
-			lea     dx, pagOpenFile	; apresenta no ecrã a string do menu jogar
+			lea     dx, pagOpenOrCreate	; apresenta no ecrã a string do menu jogar
 			mov     ah, 09h		;
 			int     21h			;
 		
@@ -862,78 +1009,103 @@ EDITOR_TABUL:
 
 		goto_xy 26,21
 		PRINT_CAR 175
+
 		goto_xy 27,21	
 
 		call READ_INPUT
 		
-		mov editor,0
 		
-		mov segundos,50
-			
-		mov fimTempo,0
+		jmp OPEN_TABUL
+        
 
-		jmp OPEN_EXIST_FILE
+jmp OPEN_OR_CREATE
 
 
-jmp EDITOR_TABUL
-
-OPEN_EXIST_FILE:
+OPEN_TABUL:
+		
         mov     ah,3dh			; vamos abrir ficheiro para leitura 
         mov     al,0			; tipo de ficheiro	
         lea     dx,fichTemp			; nome do ficheiro
         int     21h			    ; abre para leitura 
-        jc      erro_abrir		; pode aconter erro a abrir o ficheiro 
+        jc      erro_abrir_tabul		; pode aconter erro a abrir o ficheiro 
         mov     HandleFich,ax		; ax devolve o Handle para o ficheiro 
-        jmp     ler_ciclo_1		; depois de abero vamos ler o ficheiro 
+        jmp     ler_ciclo		; depois de abero vamos ler o ficheiro 
 
-ler_ciclo_1:
-        mov     ah,3fh			; indica que vai ser lido um ficheiro 
+ler_ciclo_tabul:
+       
+	    mov     ah,3fh			; indica que vai ser lido um ficheiro 
         mov     bx,HandleFich		; bx deve conter o Handle do ficheiro previamente aberto 
         mov     cx,108			; numero de bytes a ler 
         lea     dx,vetor		; vai ler para o local de memoria apontado por dx (car_fich)
         int     21h				; faz efectivamente a leitura
-		jc	    erro_ler_1		; se carry � porque aconteceu um erro
+		jc	    erro_ler_tabul		; se carry � porque aconteceu um erro
 		cmp	    ax,0			;EOF?	verifica se j� estamos no fim do ficheiro 
-		je	    fecha_ficheiro_1	; se EOF fecha o ficheiro 
+		je	    fecha_ficheiro_tabul	; se EOF fecha o ficheiro 
     
 		mov     ah,02h			; coloca o caracter no ecran
 	  ;mov	    dl,vetor	; este � o caracter a enviar para o ecran
 	 
 	  int	    21h				; imprime no ecran
-	  jmp	    CONF_GRELH		; continua a ler o ficheiro
-
-erro_ler_1:
-        mov     ah,09h
 		
+	  jmp	    ler_ciclo_tabul		; continua a ler o ficheiro
+
+erro_ler_tabul:
+        mov     ah,09h
         lea     dx,Erro_Ler_Msg
         int     21h
-		jmp CONF_GRELH
+		
 
-
-fecha_ficheiro_1:					; vamos fechar o ficheiro 
+fecha_ficheiro_tabul:					; vamos fechar o ficheiro 
         mov     ah,3eh
         mov     bx,HandleFich
         int     21h
-        jnc     Jogar
+	
+        jnc     EDITAR_ABERTO
 
         mov     ah,09h			; o ficheiro pode n�o fechar correctamente
         lea     dx,Erro_Close
         Int     21h
-	
-erro_abrir_1:
-		
-		call APAGA_ECRAN
-        mov     ah,09h
-        lea     dx,Erro_Open
-        int     21h
-        
-		mov ah, 07h
-		int 21H
-		jmp UPDATE_FILE
 
-UPDATE_FILE:
+erro_abrir_tabul:
 		
-		
+		call    APAGA_ECRAN  
+		mov     editor,1
+		jmp     CREAT_FILE
+
+
+CREAT_FILE:
+
+	   mov		ah, 3ch			; Abrir o ficheiro para escrita
+		mov		cx, 00H				; Define o tipo de ficheiro ??
+		lea		dx, fichTemp			; DX aponta para o nome do ficheiro 
+		int		21h					; Abre efectivamente o ficheiro (AX fica com o Handle do ficheiro)
+		jnc		cria			; Se não existir erro escreve no ficheiro
+		mov		ah, 09h
+		lea		dx, msgErrorCreate
+		int		21h
+	cria:
+
+		mov		bx, ax				; Coloca em BX o Handle
+    	mov		ah, 40h				; indica que é para escrever
+    	
+		lea		dx, vetor			; DX aponta para a infromação a escrever
+    	mov		cx, 108					; CX fica com o numero de bytes a escrever
+		int		21h					; Chama a rotina de escrita
+		jnc		EDITAR_ABERTO				; Se não existir erro na escrita fecha o ficheiro
+	
+		mov		ah, 09h
+		lea		dx, msgErrorWrite
+		int		21h		
+
+EDITAR_ABERTO:
+
+	mov carregado,0
+	mov editor,1
+	mov editarAberto,1
+	jmp jogar
+
+SAVE:
+			
 		mov		ah, 3ch				; Abrir o ficheiro para escrita
 		mov		cx, 00H				; Define o tipo de ficheiro ??
 		lea		dx, fichTemp			; DX aponta para o nome do ficheiro 
@@ -942,41 +1114,48 @@ UPDATE_FILE:
 		mov		ah, 09h
 		lea		dx, msgErrorCreate
 		int		21h
-		jmp MENU_JOGAR
-			
+	
+		
+
 escreve:
 
 		mov		bx, ax				; Coloca em BX o Handle
     	mov		ah, 40h				; indica que é para escrever
     	
-		lea		dx, vetor			; DX aponta para a informação a escrever
+		lea		dx, vetor			; DX aponta para a infromação a escrever
     	mov		cx, 108					; CX fica com o numero de bytes a escrever
 		int		21h					; Chama a rotina de escrita
-		
-		jnc		MENU_PRINCIPAL				; Se não existir erro na escrita fecha o ficheiro
+		jnc		close				; Se não existir erro na escrita fecha o ficheiro
 	
 		mov		ah, 09h
 		lea		dx, msgErrorWrite
 		int		21h	
-		mov ah, 07h
-		int 21H
-		jmp SELECT_FILE
 
 close:
 		mov		ah,3eh				; fecha o ficheiro
 		int		21h
-		jnc		fim
+		
+		jnc		MENU_PRINCIPAL
 	
 		mov		ah, 09h
 		lea		dx, msgErrorClose
 		int		21h
+		mov ah,02H
+		int 21h
+
+		jmp CONF_GRELH
+
 
 CONF_GRELH:
 
-		
+
 		mov editor,1
 
-		jmp EDITOR_TABUL
+		mov editarAberto,0
+
+		mov carregado,0
+
+		jmp OPEN_OR_CREATE 
 
 		jmp jogar
 
@@ -984,26 +1163,46 @@ CONF_GRELH:
 
 jogar:
 
-
+	call APAGA_ECRAN
 		MOV		AX,0B800H
 		MOV		ES,AX
-		
-		
-		call APAGA_ECRAN
-		
-		
-		cmp editor,1
-		
-		jne salto5
 
+         cmp carregado , 1	;verifica se o jogo foi carregado
+		je jogarCarregado	;salta para carregar jogo
+
+		cmp editor,0
+		je salto5
+		
+		cmp editarAberto,0  
+		je Edita_jogar  
+		
+		cmp editarAberto,0
+		jne salto5
+		Edita_jogar:
+
+	
+   call apaga_ecran
+	lea     dx, layoutEditor
+	mov     ah, 09h
+	int     21h
+	mov segundos,60
+	mov editor,1
+	jmp salto5
+	
+		salto6:
+			call APAGA_ECRAN
+			mov editor,1
 			lea     dx, layoutEditor
 			mov     ah, 09h
 			int     21h
 			mov segundos,60
 			jmp salto2
 
+		
+	
 		salto5:
-		;caso nao esteja ativo o modo de edição
+		
+		;caso nao esteja ativo o modo de ediçãça0
  		lea     dx, jogo
 		mov     ah, 09h
 		int     21h
@@ -1130,9 +1329,42 @@ novacor:
 	mov Cor2, ah ; Guarda a cor que est� na posi��o do Cursor
 	;--- Retifica cor de fundo
     dec     POSx
- 
+
+jmp CICLO_CURSOR
+
+
+jogarCarregado:
+
+		call APAGA_ECRAN
+		cmp editarAberto,0
+		je editarCarregado
+
+		;caso nao esteja ativo o modo de edição
+		mov editor,0
+ 		lea     dx, jogo
+		mov     ah, 09h
+		int     21h
+		mov pontuacao,0
+   		mov Segundos, 60 ; iniciou o jogo
+		jmp CICLO_CURSOR
+
+editarCarregado:
+
+	mov editor,1
+
+
+			call APAGA_ECRAN
+			mov editor,1
+			lea     dx, layoutEditor
+			mov     ah, 09h
+			int     21h
+			mov segundos,60
+
+
+
 CICLO_CURSOR:       
         
+		call atualizaTabuleiro
         goto_xy POSxa,POSya ; Vai para a posi��o anterior do cursor
 
         mov     ah, 02h
@@ -1188,8 +1420,11 @@ CICLO_CURSOR:
  	;      int     21H        
 		
 		cmp editor ,1
+		
 		je salto4
+	
 		mostra_pont pontuacao
+		
 		salto4:
 
 		;goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
@@ -1215,13 +1450,13 @@ CICLO_CURSOR:
 IMPRIME:    
 		
 		mov     ah, 02h
-        mov     dl, 178 
+        mov     dl, 177
         int     21H
        
         inc     POSx
         goto_xy     POSx,POSy      
         mov     ah, 02h
-        mov     dl, 178 
+        mov     dl, 177 
         int     21H
         dec     POSx
        
@@ -1240,19 +1475,19 @@ LER_SETA: ;ciclo que está sempre a executar e le a input do utilizador
 		cmp fimTempo,1 ;verifica se o tempo já chegou ao fim 
 		
 		je GAMEOVER    ;se o tempo acabou, salta para O GAMEOVER
-		
+		cmp editor,1
+		jne salto8
 		call  atualizaTabuleiro ; atualiza o ecrã com o vetor de cores em memória 
-
-		call        LE_TECLA
+		salto8:
+		call      LE_TECLA
 
 
 		cmp     ah, 1
         je      ESTEND
      
-        
+
        	cmp AL,52   
 		je MENU_PRINCIPAL
-	
  
 		cmp editor,1
 		je MUDACOR
@@ -1307,11 +1542,17 @@ MUDACOR:
 		je METECOR
 
 		cmp al,27			;caso pressione ESC
-		je UPDATE_FILE
+		je termina
+		
 
 		
 		jmp LER_SETA
+		
+		Termina:
+		mov editor,0
+		je SAVE
 
+		jmp LER_SETA
 METECOR:
 		
 		xor bx,bx 
@@ -1483,6 +1724,10 @@ EXPLODE_ESQ_F:
 
 EXPLODE_ESQ_B:
        
+       	call atualizaTabuleiro
+		mov di, 75
+		call delay
+		call atualizaTabuleiro
 		mov indiceVetor, 108
 	
 	    mov nlinha,5
@@ -1493,7 +1738,10 @@ EXPLODE_ESQ_B:
 		jne VERIFICABONUS
 		cmp POSx_in, 0
 		je VERIFICABONUS
-
+  		call atualizaTabuleiro
+		  mov di, 75
+		  call delay
+		  call atualizaTabuleiro
 		mov vetor[bx+16],0
 		mov vetor[bx+17],0
 		
@@ -1506,67 +1754,169 @@ EXPLODE_ESQ_B:
 		jmp VERIFICABONUS
 
 VERIFICABONUS:
-         
-		  mov ax, 0b800h  ; Segmento de mem�ria de v�deo onde vai ser desenhado o tabuleiro
+        
+		  mov ax, 0b800h  ; Segmento de memória de video onde vai ser desenhado o tabuleiro
           mov es, ax
 
 		  xor si,si
           xor dx,dx
 		  xor cx,cx
 		  xor ax,ax
-          cmp bonus, 0
-		  je CICLOLIMPATABUL
 
-		  mov al, 160
-		  mul POSy
-		  mov si, ax
+
+          cmp bonus, 0  			;caso o modo de bonus esteja desativado, ignora a verificação de bonus
+		  je CICLOLIMPATABUL		;salta para o menu
+
+
+		  ;;determinar a cor atual do cursor no vetor
+
+		  mov al, 18
+		  mul POSy_in
+		  mov bx, ax
           mov ax,2
-		  mul POSx
-
-		  add si, ax
+		  mul POSx_in
+		  add bx, ax
           
-		  mov cl, 45
-		  mov ch, 43
+		  mov cl, 40
+		  mov ch, 41
 		  
-		  cmp es:[si], cl
-		  je explodeNeg
-		  cmp es:[si], ch
-          je explodePos
-		  cmp es:[si+2], cl
-		  je explodeNeg
-		  cmp es:[si+2], ch
-          je explodePos
-		  cmp es:[si-2], cl
-		  je explodeNeg
-		  cmp es:[si-2], ch
-          je explodePos
-		  cmp es:[si-158], cl
-		  je explodeNeg
-		  cmp es:[si-158], ch
-          je explodePos
-		  cmp es:[si+158], cl
-		  je explodeNeg
-		  cmp es:[si+158], ch
-          je explodePos
-		  cmp es:[si-160], cl
-		  je explodeNeg
-		  cmp es:[si-160], ch
-          je explodePos
-		  cmp es:[si+160], cl
-		  je explodeNeg
-		  cmp es:[si+160], ch
-          je explodePos
-		  cmp es:[si+162], cl
-		  je explodeNeg
-		  cmp es:[si+162], ch
-          je explodePos
-		  cmp es:[si-162], cl
-		  je explodeNeg
-		  cmp es:[si-162], ch
-          je explodePos
+		  xor cx,cx 
+		  mov cl, vetor[bx]
+		  mov cor_bonus,cl
+
+
+	;~~~~~~~~ LADO ESQUERO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, -4
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, -4	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+
+	;~~~~~~~~ LADO DIREITO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, 4
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, 4	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+
+	;~~~~~~~~	CIMA
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, -160
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, -160	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+	
+	;~~~~~~~~ BAIXO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, 160
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, 160	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+
+	;~~~~~~~~ ESQUERDA TOPO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, -164
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, -164	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+	;~~~~~~~~ DIREITA TOPO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, -156
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, -156	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+	
+	;~~~~~~~~ ESQUERDA BAIXO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, 156
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, 156	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+;~~~~~~~~ ESQUERDA TOPO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, 164
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, 164	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+		
 		  jmp CICLOLIMPATABUL
 		  
 explodeNeg:
+
+		;compara a cor da posição
+
 		 dec pontuacao
 		 dec pontuacao
 		 dec pontuacao
@@ -1649,15 +1999,25 @@ CICLOLIMPATABUL:
 
 
 PUXA_COL:
+
+	push bx
+	call atualizaTabuleiro
+	
+	mov di,delayPuxaCol
+	
+	call delay
+	call atualizaTabuleiro
+	pop bx
 	xor dx,dx
+	xor ax,ax
 	cmp count,0
 	je COR_CIMA
 
 
-	mov dl, vetor[bx-19]
-	mov dh, vetor[bx-20]
-	mov vetor[bx-2],dl
-	mov vetor[bx-1],dh
+	mov al, vetor[bx-19]
+	mov ah, vetor[bx-20]
+	mov vetor[bx-2],al
+	mov vetor[bx-1],ah
 	
 	dec count
 	
@@ -1670,7 +2030,7 @@ COR_CIMA:
         call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
         pop ax ;        ; Vai buscar 'a pilha o n�mero aleat�rio
         and al, 01110000b   ; posi��o do ecran com cor de fundo aleat�rio e caracter a preto		
-        cmp al, 0       ; Se o fundo de ecran � preto
+        cmp al, 0       ; Se o fundo de ecran é preto
         je  COR_CIMA     ; vai buscar outra cor
 
     
@@ -1941,8 +2301,11 @@ COR_CIMA:
 		mov bx,100  ; copia 100 para bx para aceder ao ultimo nome no vetorNomes
 		mov cx ,10	; mete 10 no cx para executar o ciclo 10 vezes
 
+	 	goto_xy 20,20
 		LER_INPUT:  ;este ciclo insere caracter a caracter no fim do vetorNomes
 				
+				
+
 				xor ax, ax ;limpa ax apara evitar erros
 				
 				mov ah, 07h ; Ler input do utilizador
