@@ -2,104 +2,91 @@
 .MODEL SMALL
 .STACK 2048
  
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~DADOS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 DADOS   SEGMENT PARA 'DATA'
 	
-	 caracter_bonus db 0
-	 cor_bonus db 0
-	 offset_bonus dw 0 ;tem que ser dw porque pode ser negativo
-	igualBonus db 0 ; guarda o valor da comparação (se caracter e cor são iguais)
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ BONUS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	cor_escolhida db 0	   ;cor que o user escolhe para o bonus
+	count_escolhido db 0   ;guarda o numero de explosões necessárias
+	caracter_bonus db 0	   ;guarda o caracter que vai ser usado no procedimento
+	cor_bonus db 0         ;guarda a cor da posição do cursor
+	offset_bonus dw 0 	   ;offset relativo à posição do cursor (tem que ser dw porque pode ser negativo)
+	igualBonus db 0        ;guarda o valor da comparação (se caracter e cor são iguais)
+	eyes db ':'			   
+	plus db ')'	
+	minus db '('
+	bonus db 0			   ;acumula a pontuação ao longo das explosões para depois duplicar
+	flagBonusDup db 0	   ;flag que indica se o bonos está ativo ou não
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ BONUS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TOP 10 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	posXtop db 0		   ;usadas para saber a posição do cursor dentro do top 10
+	posYtop db 0		   ;
+	posTOP db 1	           ;usado para guardar os lugares no top (1º-10º)
+	indicePontos dw  0     ;para fazer o ciclo 10 vezes de imprimir a informação 
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TOP 10 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TABULEIRO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	tamX_v db 9            ; Largura do tabuleiro
+    tamY_v db 6            ; Altura do tabuleiro
+	linhaVetor db 0    
+	colunaVetor db 0
+	indiceVetor dw 0       ;usado para guardar a posição no vetor (quando descemos as peças no tabuleiro)
+	count db 0             ;usado para guardar as linhas do tabuleiro quando descemos 
 	delayPuxaCol dw 10
-	eyes db ':'
-	flagBonusDup db 0
-
 	carregado db 0
 	editarAberto  db 0
-	fichTemp db '1',0
- 	flagAtualizaTop db 0 ;variavel que diz se é preciso atualizar o top ou não
-
-	tmpPontos db 0 ;guarda os pontos realizados na ultima jogada
-	tmpTempos db 0 ;guarda os  
-	tmpSI db 0		;usada para guardar o valor de SI depois do ciclo trocaCar
-
-	;~~~~~~ variaveis usadas para saber a localização atual do cursor no top 10~~~~
-	posXtop db 0
-	posYtop db 0
-	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	posTOP db 1	;usado para guardar os lugares no top (1º-10º)
-
+ 	flagAtualizaTop db 0   ;variavel que diz se é preciso atualizar o top ou não
+	tmpPontos db 0         ;guarda os pontos realizados na ultima jogada
+	tmpTempos db 0         ;guarda os  
+	tmpSI db 0	           ;usada para guardar o valor de SI depois do ciclo trocaCar
+	fimTempo db 0          ;flag que guarda o fim do programa 
+	editor db 0			   ;define se está em modo de edição ou não
+	usarEditado db 0	   ;flag que é ativa quando se usa o tabuleiro editado
+	explodiuMeio db 0      ;flag para informar se foi explodida a peça onde se encontra o cursor
+	pontuacao db 0		   ;pontuação num determinado jogo
+	ultimo_num_aleat dw 0
+	str_num db 5 dup(?),'$'
+    espaco  db  ' '
+	tamX db 9 			   ; Largura do tabuleiro
+    tamY db 6              ; Altura do tabuleiro
+    iniX dw 60             ; Primeiro ponto do tabuleiro em X
+    iniY db 8              ; Primeiro ponto do tabuleiro em Y    
+	POSx_in db 4 		   ;posicao X dentro do tabul
+	POSy_in db 3           ;posicao Y dentro do tabul
+	vetor db 108 dup(0)    ;vetor que contem o tabuleiro
+	nlinha db 5
+	aux db 0
+	aux2 db 0
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TABULEIRO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
-	indicePontos dw  0 ;para fazer o ciclo 10 vezes de imprimir a informação 
 
-	indiceVetor dw 0  ;usado para guardar a posição no vetor (quando descemos as peças no tabuleiro)
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TEMPO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	STR12	 		DB 		"            "; String para 12 digitos
+	contaSeg 		dw 		0        ;contador que regista a varia��o dos segundos/tempo
+	Segundos		dw		?        ; Vai guardar os segundos actuais
+	Old_seg			dw		0        ; Guarda os �ltimos segundos que foram lidos
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TEMPO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	count db 0 ;usado para guardar as linhas do tabuleiro quando descemos 
 
-	fimTempo db 0 ;flag que guarda o fim do programa 
+    ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ CURSOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Car     db  32  ; Guarda um caracter do Ecran
+    Cor     db  7   ; Guarda os atributos de cor do caracter
+    Car2        db  32  ; Guarda um caracter do Ecran
+    Cor2        db  7   ; Guarda os atributos de cor do caracter
+    POSy        db  11  ; A linha pode ir de [1 .. 25]
+    POSx        db  38  ; POSx pode ir [1..80] 
+    iniTabY     db  8  ; pos Y[0]
+    iniTabX     db  30  ; Pos X[0]
+    POSya       db  5   ; Posição anterior  y
+    POSxa       db  10  ; Posãoo anterior  x
+    ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ CURSOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		
 
-	vetorTEMPOS db      0,0,0,0,0,0,0,0,0,0,0
-	vetorPONTOS db  	0,0,0,0,0,0,0,0,0,0,0
-	vetorNOMES  db   '                                                                                                              '
-
-
-;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
-	
-		editor db 0
-		usarEditado db 0
-
-;~~~~~~~Variavel tipo flag para dizer se está no modo de edição ou de jogo ~~~~~~~~~~~~~~
-
-
-		explodiuMeio db 0 ;flag para informar se foi explodida a peça onde se encontra o cursor
-
-		pontuacao db 0
-		pontuacao_total db 0
-	
-    ; --- DADOS PRINCIPAIS ---
-		POSx_in db 4 ;posicao X dentro do tabul
-		POSy_in db 3 ;posicao Y dentro do tabul
-		vetor db 108 dup(0) 
-		vetor1 db 108 dup(0)
-		nlinha db 5
-		aux db 0
-		aux2 db 0
-		plus db ')'
-		minus db '('
-		bonus db 0
-    ; --- !DADOS PRINCIPAIS ---
-   
-    ; --- DADOS INICIAIS ---
-        tamX db 9 ; Largura do tabuleiro
-        tamY db 6 ; Altura do tabuleiro
-        iniX dw 60 ; Primeiro ponto do tabuleiro em X
-        iniY db 8 ; Primeiro ponto do tabuleiro em Y
-    ; --- !DADOS INICIAIS ---
-	
-	; --- VARIAVEIS DO TABULEIRO ---
-        ultimo_num_aleat dw 0
-        str_num db 5 dup(?),'$'
-        ;cor    db  0
-        espaco  db  ' '    
-    ; --- !VARIAVEIS DO TABULEIRO ---
-   
-    ; --- VARIAVEIS DO CURSOR ---
-        Car     db  32  ; Guarda um caracter do Ecran
-        Cor     db  7   ; Guarda os atributos de cor do caracter
-        Car2        db  32  ; Guarda um caracter do Ecran
-        Cor2        db  7   ; Guarda os atributos de cor do caracter
-        POSy        db  11  ; a linha pode ir de [1 .. 25]
-        POSx        db  38  ; POSx pode ir [1..80] 
-        iniTabY     db  8  ; pos Y[0]
-        iniTabX     db  30  ; Pos X[0]
-        POSya       db  5   ; Posi��o anterior de y
-        POSxa       db  10  ; Posi��o anterior de x
-    ; --- !VARIAVEIS DO CURSOR ---
-		
-	; --- VARIAVEIS DE MSG DO MENU ---	
-
+ 	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STRINGS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	Menu db " ",10,13   
 		db "																	     ",10,13
 		db "  	 _______ _______ __   __   _______ ___     _______ _______ _______   ",10,13
@@ -162,7 +149,7 @@ TOP10 db" ",10,13
 	db "		 													   			 ",10,13
 	db "																	     ",10,13
 	db "________________________________________________________________________________ ",10,13
-	db "		A explosao das pecas com simbolos duplica os pontos			     ",10,13
+	db "		Carregue no enter ou espaco para explodir as pecas			     ",10,13
 	db "$",10,13
 	
 	
@@ -241,29 +228,80 @@ TOP10 db" ",10,13
 	db "							ESC   para sair								 	 ",10,13
 	db "$",10,13
 
+	PagJogarBonus db "  ",10,13
 
+	db "     TEMPO RESTANTE:                                      Cor escolhida:",10,13
+	db "                                                                         ",10,13
+	db "     PONTUACAO:						Faltam explodir:                     ",10,13
+	db "                                                                         ",10,13
+	db "                                                                         ",10,13
+	db "			   		  						   						  	 ",10,13
+	db "																	     ",10,13
+	db "																	     ",10,13
+	db "		 													   			 ",10,13
+	db "		 													   			 ",10,13
+	db "																	     ",10,13
+	db "________________________________________________________________________________ ",10,13
+	db "          Cara feliz duplica a pontuacao, cara triste remove pontuacao   	     ",10,13
 
-  	; --- !VARIAVEIS DE MSG DO MENU ---	
+	db "$",10,13
+	PagBonusCor db " ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                     Qual a cor que deseja selecionar?                        ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                      1 -  Azul  Escuro                                       ",10,13
+	db "                      2 -  Verde                                              ",10,13
+	db "                      3 -  Azul Claro                                         ",10,13
+	db "                      4 -  Vermelho                                           ",10,13
+	db "                      5 -  Roxo                                               ",10,13
+	db "                      6 -  Laranja                                            ",10,13
+	db "                      7 -  Branco                                             ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "________________________________________________________________________________ ",10,13
+	db "                          Prima 'ESC' para sair para o menu!   	     ",10,13
+	db "$",10,13
 
-	; ---- VARIAVEIS MOSTRA VETOR ---
-		tamX_v db 9 ; Largura do tabuleiro
-        tamY_v db 6 ; Altura do tabuleiro
-		linhaVetor db 0
-		colunaVetor db 0
-	; --- !VARIAVEIS MOSTRA VETOR ---
-	
-	;------TRATA_HORAS_JOGO E DATA_JOGO ---
-	STR12	 		DB 		"            "	; String para 12 digitos
-	contaSeg 		dw 		0				;contador que regista a varia��o dos segundos/tempo
-	Segundos		dw		?			; Vai guardar os segundos actuais
-	Old_seg			dw		0				; Guarda os �ltimos segundos que foram lidos
-	;------TRATA_HORAS_JOGO E DATA_JOGO ---
-	
-	
+	PagBonusNumero db " ",10,13
+	db "                                                                              ",10,13
+	db "                     Esta foi a cor selecionada...                            ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                    Qual o valor minimo de explosoes?                         ",10,13
+	db "                                                                              ",10,13
+	db "                     Introduza um digito entre 1 e 9                          ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "                                                                              ",10,13
+	db "________________________________________________________________________________ ",10,13
+	db "                          Prima 'ESC' para sair para o menu!   	     ",10,13
+	db "$",10,13
+
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STRINGS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		
-	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FICHEIROS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FICHEIROS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-			fname	db	'pergunta.txt',0
+			vetorTEMPOS db      0,0,0,0,0,0,0,0,0,0,0 ;armazena os tempos do top10
+			vetorPONTOS db  	0,0,0,0,0,0,0,0,0,0,0 ;armazena os pontos do top10
+			vetorNOMES  db   '                                                                                                              '
+
+			fichTemp db '1',0       ;guarda a input do utilizador
 			fhandle dw	0
 			HandleFich      dw      0
         	car_fich        db      ?
@@ -279,7 +317,7 @@ TOP10 db" ",10,13
 		    
 			;~~~~~~~~~~~~~~~~~~~ NOMES DOS FICHEIROS EM MEMÓRIA ~~~~~~~~~~~~~~~~~~
 			
-			Fich         	db      'pergunta.TXT'  ,0
+	
 			fPontos      	db 		'pontos.txt'    ,0
 			fNomes			db      'nomes.txt'     ,0
 			fTempo			db      'tempos.txt'    ,0
@@ -288,15 +326,16 @@ TOP10 db" ",10,13
 			;~~~~~~~~~~~~~~~~~~~ NOMES DOS FICHEIROS EM MEMÓRIA ~~~~~~~~~~~~~~~~~~
 
 
-	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FICHEIROS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FICHEIROS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 DADOS   ENDS
- 
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~DADOS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 CODIGO  SEGMENT PARA 'CODE'
     ASSUME CS:CODIGO, DS:DADOS
    
-; ---- PROCEDIMENTOS TABULEIRO ---
-    ; ---- PROCEDIMENTO GERA ALEATORIO ---
     CalcAleat proc near
         sub sp,2        ;
         push    bp
@@ -331,8 +370,6 @@ CODIGO  SEGMENT PARA 'CODE'
         ret
     CalcAleat endp
    
- 
-    ; ---- PROCEDIMENTO DELAY ---
     delay proc
         pushf
         push    ax
@@ -373,127 +410,141 @@ CODIGO  SEGMENT PARA 'CODE'
         ret
     delay endp
    
-; ---- !PROCEDIMENTOS TABULEIRO ---
-   
-; ---- PROCEDIMENTOS/ROTINAS CURSOR ---
-    ; ---- VAI PARA X E Y ---
     goto_xy macro       POSx,POSy
         mov     ah,02h
-        mov     bh,0        ; numero da p�gina
+        mov     bh,0        ; numero da página
         mov     dl,POSx
         mov     dh,POSy
         int     10h
 
     endm
-	; MOSTRA - Faz o display de uma string terminada em $
-
+	
+;~~~~~~ MACRO QUE MOSTRA UMA STRING NO ECRA ~~~~~~	
 MOSTRA MACRO STR 
 	MOV AH,09H
 	LEA DX,STR 
 	INT 21H
 ENDM
+;~~~~~~ MACRO QUE MOSTRA UMA STRING NO ECRA ~~~~~~	
 
+
+;~~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA DETERMINAR BONUS ~~~~~~~~~~~~~~~~~~~~~~
 compara_bonus PROC
-
 
 		xor ax,ax
 		xor cx,cx
-		mov cl,caracter_bonus
-		mov ch, cor_bonus
-	  	
-		mov al, 160
 
-		mul POSy
-		mov si, ax
-        mov ax,2
-		mul POSx
-		
-		add si, ax
+		mov cl,caracter_bonus   ;carrega em cl o caracter previamente guardado 
+		mov ch, cor_bonus		;carrega em ch o caracter previamente guardado 
+		mov al, 160				;mete 160 em al, para fazer a multiplicação
+		mul POSy				;mutiplica POSy por 160
+		mov si, ax				;mete o resultado em si
+        mov ax,2				
+		mul POSx				;multiplica POSx por 2
+		add si, ax				;adiciona o si a ax de modo a obter a posiçao atual na memoria de video
 	
-        add si,offset_bonus
+        add si,offset_bonus		;adiciona o offset
 		
-		cmp es:[si+1],ch
-		jne errado
+		cmp es:[si+1],ch		;verifica se a cor na posiçao da memoria de video é igual à carregada em ch
+		jne errado				;caso seja falso, salta
 
-		cmp es:[si],cl
-		jne errado
-		mov igualBonus,1
+		cmp es:[si],cl			;caso a cor seja igual, testa o caracter
+		jne errado				;caso esteja errado, salta
+		
+		mov igualBonus,1		;caso esteja correto, mete a flag a 1, para ser usada posteriormente
 		jmp saiMacro
 
 		errado:  
 			mov igualBonus,0
-		saiMacro:
-		ret
-compara_bonus ENDP
 
+		saiMacro:
+			ret					;sai do procedimento
+
+compara_bonus ENDP
+;~~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA DETERMINAR BONUS ~~~~~~~~~~~~~~~~~~~~~~
+
+;~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA MOSTRAR PONTUAÇÃO ~~~~~~~~~~~~~~~~~~~~~~
 mostra_pont MACRO  pont
 	
 	xor dx,dx
 	mov ax,0
 
-	mov 	al,pontuacao
-	MOV 	bl, 100  
-	  
-	div 	bl
+	mov al,pont	   ;carrega em al, o valor que se pretende mostrar
 
-    mov dl,al
-	mov dh,ah
+	mov bl, 100    ;mete 100 em bl, uma vez que vamos dividir por 100
 
-	add 	al, 30h				; Caracter Correspondente �s dezenas
-	add		ah,	30h				; Caracter Correspondente �s unidades
-	MOV 	STR12[0],al		; 
+	div bl		   ;divide efectivamente	
+  
+    mov dl,al	   ;guarda os resultados da divisao para usar posteriormente
+	mov dh,ah      ;
+	
+	add al, 30h	   ; caracter correspondente às centenas
+	
+	mov str12[0],al	 ;guarda o valor das centenas na string para ser imprimida mais tarde		 
+	
+	xor ax,ax		
+	mov al,dh		;vai buscar os valores guardados para dividir mais uma vez, desta vez por 10
 
-	xor ax,ax
-	mov al,dh
+	mov bl,10       ;divide por 10
+	div bl			;
 
-	mov bl,10
-	div bl
-	add 	al, 30h				; Caracter Correspondente �s dezenas
-	add		ah,	30h				; Caracter Correspondente �s unidades
-	MOV 	STR12[1],al			; 
-	MOV 	STR12[2],ah
-	MOV 	STR12[3],'$'
+	add al, 30h		; caracter correspondente às dezenas
+	add	ah,	30h		; caracter correspondente às unidades
+
+	mov  str12[1],al			
+	mov  str12[2],ah
+	mov  str12[3],'$'
 
 	GOTO_XY	22,4 ; posiçao ond evai ser imprimida a pontuação
 
-	MOSTRA	STR12 			
+	MOSTRA	STR12  ;utiliza a macro para mostrar a string			
 		
 ENDM	
+;~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA MOSTRAR PONTUAÇÃO ~~~~~~~~~~~~~~~~~~~~~~
 
+
+
+;~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA MOSTRAR UM NUMERO ~~~~~~~~~~~~~~~~~~~~~~
 PRINT_NUMERO MACRO pont
 	
 	xor ax,ax
 	xor dx,dx
 	mov ax,0
 
+	mov 	al,pont         ;carrega em al, o valor que se pretende mostrar
 
-	mov 	al,pont
-
-	MOV 	cl, 100
-	div 	cl
+	MOV 	cl, 100         ;mete 100 em bl, uma vez que vamos dividir por 100
+	div 	cl	            ;divide efectivamente
 	
-	mov dl,al
-	mov dh,ah
+	mov dl,al               ;guarda os resultados da divisao para usar posteriormente
+	mov dh,ah		        ;
+  
 
-	add 	al, 30h				; Caracter Correspondente �s dezenas
-	add		ah,	30h				; Caracter Correspondente �s unidades
-	MOV 	STR12[0],al		; 
+	add 	al, 30h			 ;caracter correspondente às centenas
+	MOV 	STR12[0],al		 ; 
 
 	xor ax,ax
 	mov al,dh
 
-	mov cl,10
+	mov cl,10				;divide por 10
 	div cl
 
-	add 	al, 30h				; Caracter Correspondente �s dezenas
-	add		ah,	30h				; Caracter Correspondente �s unidades
-	MOV 	STR12[1],al			; 
-	MOV 	STR12[2],ah
-	MOV 	STR12[3],'$'
-	MOSTRA	STR12 			
+	add al, 30h				 ; caracter correspondente às dezenas
+	add	ah,	30h		         ; caracter correspondente às unidades
+
+	mov str12[1],al			; 
+	mov str12[2],ah
+	mov str12[3],'$'
+	MOSTRA	str12	      ;mostra a string no era		
 	
 ENDM
 
+;~~~~~~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA MOSTRAR UM NUMERO ~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+;~~~~~~~~~~~~~~~~~~~~~ MACRO PARA MOSTRAR UM CARACTER ~~~~~~~~~~~~~~~~~~~~~~
 PRINT_CAR MACRO car
 	
 	mov ah,02H
@@ -501,7 +552,13 @@ PRINT_CAR MACRO car
 	int 21H
 
 ENDM
-    ;ROTINA PARA APAGAR ECRAN
+
+;~~~~~~~~~~~~~~~~~~~~~ MACRO PARA MOSTRAR UM CARACTER ~~~~~~~~~~~~~~~~~~~~~~
+   
+   
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~ ROTINA PARA APAGAR O ECRA ~~~~~~~~~~~~~~~~~~~~~~~
+  
     apaga_ecran proc
             xor     bx,bx
             mov     cx,25*80
@@ -514,7 +571,6 @@ ENDM
             ret
     apaga_ecran endp
    
-    ; LE UMA TECLA
     LE_TECLA    PROC
  sem_tecla:
 		
@@ -534,11 +590,11 @@ ENDM
             mov     ah,1
     SAI_TECLA:  RET
     LE_TECLA    endp
-; ---- !PROCEDIMENTOS/ROTINAS CURSOR ---
+;~~~~~~~~~~~~~~~~~~~~~~~~~ ROTINA PARA APAGAR O ECRA ~~~~~~~~~~~~~~~~~~~~~~~
    
    
-;########################################################################
-; IMPRIME O TEMPO E A DATA NO MONITOR
+
+;~~~~~~~~~~~~~~~~~~~~~ IMPRIMIR TEMPO E DATA NO ECRA ~~~~~~~~~~~~~~~~~~~~~~~
 
 TRATA_HORAS_JOGO PROC
 
@@ -554,9 +610,9 @@ TRATA_HORAS_JOGO PROC
 	CALL 	LER_TEMPO_JOGO				; Horas MINUTOS e segundos do Sistema
 	
 	MOV		AX, contaSeg
-	cmp		AX, Old_seg			; VErifica se os segundos mudaram desde a ultima leitura
-	je		FIM_HORAS			; Se a hora n�o mudou desde a �ltima leitura sai.
-	mov		Old_seg, AX			; Se segundos s�o diferentes actualiza informa��o do tempo
+	cmp		AX, Old_seg			; Verifica se os segundos mudaram desde a ultima leitura
+	je		FIM_HORAS			; Se a hora não mudou desde a última leitura sai.
+	mov		Old_seg, AX			; Se segundos s�o diferentes actualiza informação do tempo
 
 	dec Segundos
 	cmp Segundos, 0
@@ -606,10 +662,11 @@ FIM_HORAS:
 			
 TRATA_HORAS_JOGO ENDP
 
+;~~~~~~~~~~~~~~~~~~~~~ IMPRIMIR TEMPO E DATA NO ECRA ~~~~~~~~~~~~~~~~~~~~~~~
 
-;########################################################################
-; HORAS  - LE HORA DO SISTEMA E COLOCA EM TRES VARIAVEIS (HORAS, MINUTOS, SEGUNDOS)
 
+
+;~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA LER TEMPO DE JOGO ~~~~~~~~~~~~~~~~~~~~~~~
 LER_TEMPO_JOGO PROC	
  
 		PUSH AX
@@ -619,12 +676,12 @@ LER_TEMPO_JOGO PROC
 	
 		PUSHF
 		
-		MOV AH, 2CH             ; Buscar a hORAS
+		MOV AH, 2CH             ; Obter as horas
 		INT 21H                 
 		
 		XOR AX,AX
-		MOV AL, DH              ; segundos para al
-		mov contaSeg, AX		; guarda segundos na variavel correspondente
+		MOV AL, DH              ; meter os segundos em al
+		mov contaSeg, AX		; guarda na variavel
  
 		POPF
 		POP DX
@@ -634,12 +691,16 @@ LER_TEMPO_JOGO PROC
  		RET 
 LER_TEMPO_JOGO   ENDP 
 
+;~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA LER TEMPO DE JOGO ~~~~~~~~~~~~~~~~~~~~~~~
+
+
+;~~~~~~~~~~~~~~~~ PROCEDIMENTO PARA LER INPUT~~~~~~~~~~~~~~~~~~~~~~~
 READ_INPUT PROC
 
 		mov si,0
 		mov cx,10
 
-		LIMPAR_BUFFER:
+		LIMPAR_BUFFER:  ;limpar a string para minimizar erros
 
 			mov fichTemp[si],0
 			inc si
@@ -698,6 +759,8 @@ READ_INPUT PROC
 			
 
 READ_INPUT ENDP
+
+
 ;~~~~~~~~~~~~~~~~~ Procedimento para atualizar a mem de video com o vetor das cores ~~~~~~~~~~~
 atualizaTabuleiro proc
 	
@@ -800,7 +863,6 @@ atualizaTabuleiro endp
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-
 PRINC PROC
 
     MOV AX, DADOS
@@ -881,31 +943,86 @@ PRINC PROC
 			cmp  al, 51 ; Se inserir 2
                 je SELECT_FILE  ;salta para a seleção do tabuleiro 	
 			
-
-			
-
             cmp al,52
                 je MENU_PRINCIPAL
 			
 			jmp MENU_JOGAR ;repete o ciclo, caso não ocorra nenhuma das opções anteriores
 			jogarBonus:
-				mov flagBonusDup,1
+				
+				mov ax, 0b800h  ; Segmento de memória de video onde vai ser desenhado o tabuleiro
+          		mov es, ax
+
+				call APAGA_ECRAN
+				lea     dx, PagBonusCor	; apresenta no ecrã a string do menu jogar
+				mov     ah, 09h		;
+				int     21h			;
+				
+				mov ah,07H		    ;espera pela input do utilizador 
+				int 21H
+				cmp al, 27			;verifica se o utilizador introduziu EScC
+				je MENU_PRINCIPAL	;salta para o menu principal caso tenha introduzido enter
+
+				;~~~~~~~~valida a input do utilizador~~~~~~~
+				cmp al,49 			
+				jb jogarBonus
+				cmp al,57
+				ja jogarBonus
+				;~~~~~~~~valida a input do utilizador~~~~~~~
+
+				mov cor_escolhida,al  ;mete na variavel o resultado da input
+				sub cor_escolhida,30H ;subtrai 48 para obter de ascii para o valor real
+				mov ah,0	
+				mov cl , 16			  ;multiplica por 16 pq as cores são multiplas de 16
+				mul cl 
+				
+				mov cor_escolhida,al	;move a cor final para a variável
+				
+
+				call APAGA_ECRAN
+
+				lea     dx, PagBonusNumero	
+				mov     ah, 09h	
+				int     21h			
+
+				;~~~~~~~  Mostra a cor que foi selecionada ~~~~~~~~
+				mov si, 583    
+				mov ch,cor_escolhida
+				mov es:[si-1],cx
+				mov es:[si+1],cx
+				;~~~~~~~  Mostra a cor que foi selecionada ~~~~~~~~
+				
+
+				mov ah,07H   ;obtem input do user
+				int 21H
+
+				cmp al, 27			;caso seja ESC, volta para o menu
+				je MENU_PRINCIPAL
+
+				;~~~~~~~~valida a input do utilizador~~~~~~~
+				cmp al, 49
+				jb jogarBonus
+				cmp al ,57
+				ja jogarBonus
+				sub al,30h
+				;~~~~~~~~valida a input do utilizador~~~~~~~
+
+				mov count_escolhido,al	;guarda o numero escolhido
+				mov flagBonusDup,1     ;ativa a flag que avisa o modo de bonus
 				jmp jogar
 
 		FORA: 
-			CMP AL, 27 ; TECLA ESCAPE
+			CMP AL, 27 
 			JE fim;
 		
 	JMP MENU_PRINCIPAL
 
-SELECT_FILE: ;ecra para selecionar o ficheiro que queremos abrir 
-		
-	
-		
-		mov segundos,60
-			
+;~~~~~~~~~~~~~~~~~~~~~~ECRA PARA SELECIONAR FICHEIRO PARA ABRIR~~~~~~~~~~~~~~
+
+SELECT_FILE: 
+
+		mov segundos,60		
 		mov fimTempo,0
-		
+
 		call APAGA_ECRAN
 		
 			lea     dx, pagOpenFile	; apresenta no ecrã a string do menu jogar
@@ -1149,9 +1266,9 @@ close:
 CONF_GRELH:
 
 
-		mov editor,1
+		mov editor,1          ;ativa a flag do editor
 
-		mov editarAberto,0
+		mov editarAberto,0	  
 
 		mov carregado,0
 
@@ -1167,6 +1284,8 @@ jogar:
 		MOV		AX,0B800H
 		MOV		ES,AX
 
+	 cmp flagBonusDup,1
+	 je jogar_Bonus
          cmp carregado , 1	;verifica se o jogo foi carregado
 		je jogarCarregado	;salta para carregar jogo
 
@@ -1209,6 +1328,15 @@ jogar:
 		mov pontuacao,0
    		mov Segundos, 60 ; iniciou o jogo
 		
+		jmp salto2
+
+		jogar_Bonus:
+		lea     dx, PagJogarBonus
+		mov     ah, 09h
+		int     21h
+		mov pontuacao,0
+   		mov Segundos, 60 ; iniciou o jogo
+
 		salto2:
 
 		mov iniX, 60
@@ -1359,7 +1487,7 @@ editarCarregado:
 			mov     ah, 09h
 			int     21h
 			mov segundos,60
-
+			jmp CICLO_CURSOR
 
 
 CICLO_CURSOR:       
@@ -1386,14 +1514,14 @@ CICLO_CURSOR:
         int     10h    
         mov     Car, al ; Guarda o Caracter que est� na posi��o do Cursor
         ;mov     Cor, ah ; Guarda a cor que est� na posi��o do Cursor
-		;--- Retifica cor de fundo
-		mov cl, 4 ; PARA FAZER O ROR TEM DE SR COM CL
-		ror ah, cl
+		
+		
 			
 		add ah, 48
 		mov Cor, ah ; Guarda a cor que est� na posi��o do Cursor
 		;--- Retifica cor de fundo
        
+
         inc     POSx
         goto_xy     POSx,POSy   ; Vai para nova possi��o
         mov         ah, 08h
@@ -1419,6 +1547,15 @@ CICLO_CURSOR:
  	;      mov     dl, Car
  	;      int     21H        
 		
+
+		cmp flagBonusDup,1
+		jne salto9
+
+			goto_xy 73,4
+			PRINT_NUMERO count_escolhido
+
+		salto9:
+		
 		cmp editor ,1
 		
 		je salto4
@@ -1427,20 +1564,6 @@ CICLO_CURSOR:
 		
 		salto4:
 
-		;goto_xy     60,0        ; Mostra o caractr2 que estava na posição do AVATAR
-		;mov al, 48
-		;add al, POSx_in
-        ;mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
-        ;mov     dl, al   
-        ;int     21H 
-		
-		;goto_xy     61,0        ; Mostra o caractr2 que estava na posi��o do AVATAR
-		;mov al, 48
-		;add al, POSy_in
-       ; mov     ah, 02h     ; IMPRIME caracter2 da posi��o no canto
-       ; mov     dl, al   
-       ; int     21H 
-    
         goto_xy     POSx,POSy   ;Vai para posi��o do cursor
 
 		cmp al,113
@@ -1601,12 +1724,7 @@ EXPLODE_DIR_F:
 		inc pontuacao
 		mov explodiuMeio,1
 
-		;mov dl, vetor[bx]
-		;cmp vetor[si+10], dl
-		;mov dl, vetor[si+34]
-		;mov dl, vetor[si+82]
-		;mov dl, vetor[si+40]
-		;mov dl, vetor[si+94]
+	
 		jmp EXPLODE_DIR_T
 
 
@@ -1703,7 +1821,7 @@ EXPLODE_ESQ_T:
 
 EXPLODE_ESQ_F:
 
-	;	mov al,vetor[bx]
+
 		cmp vetor[bx-2],al
 		jne EXPLODE_ESQ_B
 		
@@ -1732,8 +1850,6 @@ EXPLODE_ESQ_B:
 	
 	    mov nlinha,5
         
-        
-
 		cmp vetor[bx+17],al
 		jne VERIFICABONUS
 		cmp POSx_in, 0
@@ -1753,38 +1869,62 @@ EXPLODE_ESQ_B:
 
 		jmp VERIFICABONUS
 
+;~~~~~~~~~~~~~~~~~~~~~~~~~~PROCEDIMENTO DECREMNTAR AS NECESSARIAS~~~~~~~~~~~~~~~~~~
+decAExplodir PROC
+ 	
+	mov cl, cor_escolhida
+
+	cmp cl,cor_bonus
+	jne fim
+
+	dec count_escolhido
+		
+ fim:
+ret
+
+decAExplodir ENDP
+;~~~~~~~~~~~~~~~~~~~~~~~~~~PROCEDIMENTO DECREMNTAR AS NECESSARIAS~~~~~~~~~~~~~~~~~~
+
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~PROCEDIMENTO PARA VERIFICAR O BONUS~~~~~~~~~~~~~~~~~~~
 VERIFICABONUS:
         
-		  mov ax, 0b800h  ; Segmento de memória de video onde vai ser desenhado o tabuleiro
-          mov es, ax
+		mov ax, 0b800h  ; Segmento de memória de video onde vai ser desenhado o tabuleiro
+        mov es, ax
 
-		  xor si,si
-          xor dx,dx
-		  xor cx,cx
-		  xor ax,ax
+		xor si,si
+        xor dx,dx
+		xor cx,cx
+		xor ax,ax
+
+		
+        cmp bonus, 0  			;caso o modo de bonus esteja desativado, ignora a verificação de bonus
+		je CICLOLIMPATABUL		;salta para o menu
 
 
-          cmp bonus, 0  			;caso o modo de bonus esteja desativado, ignora a verificação de bonus
-		  je CICLOLIMPATABUL		;salta para o menu
+		;;determinar a cor atual do cursor no vetor
+		mov si,470
+		mov ch,cor_escolhida
+			
+		mov es:[si],cx
+		mov es:[si-2],cx
 
-
-		  ;;determinar a cor atual do cursor no vetor
-
-		  mov al, 18
-		  mul POSy_in
-		  mov bx, ax
-          mov ax,2
-		  mul POSx_in
-		  add bx, ax
+		mov al, 18
+		mul POSy_in
+		mov bx, ax
+        mov ax,2
+		mul POSx_in
+		add bx, ax
           
-		  mov cl, 40
-		  mov ch, 41
+		mov cl, 40
+		mov ch, 41
 		  
-		  xor cx,cx 
-		  mov cl, vetor[bx]
-		  mov cor_bonus,cl
+		xor cx,cx 
+		mov cl, vetor[bx]
+		mov cor_bonus,cl
 
-
+     	call decAExplodir
+		 
 	;~~~~~~~~ LADO ESQUERO
 
 		;~~~~ HAPPY FACE~~~~~
@@ -1895,7 +2035,7 @@ VERIFICABONUS:
 		  cmp igualBonus,1
 		  je explodeNeg	
 	;~~~~~~~~~~~~~~~~~~~~~
-;~~~~~~~~ ESQUERDA TOPO
+    ;~~~~~~~~ ESQUERDA TOPO
 
 		;~~~~ HAPPY FACE~~~~~
 		  mov caracter_bonus,40 ;mete o caracater '('
@@ -1909,28 +2049,35 @@ VERIFICABONUS:
 		  call compara_bonus 
 		  cmp igualBonus,1
 		  je explodeNeg	
-	;~~~~~~~~~~~~~~~~~~~~~
+	    ;~~~~~~~~~~~~~~~~~~~~~
 		
 		  jmp CICLOLIMPATABUL
-		  
+
+
+;~~~~~~~~~~~~~REDUZ A PONTUAÇAO CASO SEJA SADFACE~~~~~~~~~~~~~~~		  
 explodeNeg:
 
-		;compara a cor da posição
+		
 
 		 dec pontuacao
 		 dec pontuacao
 		 dec pontuacao
 		 dec pontuacao
 		 jmp CICLOLIMPATABUL
+;~~~~~~~~~~~~~REDUZ A PONTUAÇAO CASO SEJA SADFACE~~~~~~~~~~~~~~~
 
+
+;~~~~~~~~~~~~~~~~~~~~~~~~DUPLICA PONTUAÇÃO~~~~~~~~~~~~~~~~~~~
 explodePos:
+		
+		call decAExplodir
          mov dh,0
          mov dl, bonus
 		 add pontuacao,dl
 		 add pontuacao,1
 		 jmp CICLOLIMPATABUL
 		
-
+;~~~~~~~~~~~~~~~~~~~~~~~~DUPLICA PONTUAÇÃO~~~~~~~~~~~~~~~~~~~
 ESTEND:     
 		cmp  al,48h
         jne  BAIXO
@@ -1978,6 +2125,7 @@ DIREITA:
         jmp     CICLO_CURSOR ;repor as cenas
 
 
+;~~~~~~~~~~~~~~~~~~~~~~~~~~CICLO PARA DESCER PEÇAS~~~~~~~~~~~~~~~~~~
 CICLOLIMPATABUL:
     
 	cmp indiceVetor,0
@@ -1996,8 +2144,9 @@ CICLOLIMPATABUL:
 	dec indiceVetor
 	
 	jmp CICLOLIMPATABUL
+;~~~~~~~~~~~~~~~~~~~~~~~~~~CICLO PARA DESCER PEÇAS~~~~~~~~~~~~~~~~~~
 
-
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PUXA COLUNA~~~~~~~~~~~~~~~~~~~~~~~~
 PUXA_COL:
 
 	push bx
@@ -2024,7 +2173,10 @@ PUXA_COL:
 	sub bx,18
 	jmp PUXA_COL
 
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PUXA COLUNA~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~METER NOVA COR NO CIMO~~~~~~~~~~~~~~~~~~~~~~~~
 COR_CIMA:
 
         call    CalcAleat   ; Calcula pr�ximo aleat�rio que � colocado na pinha
@@ -2034,13 +2186,14 @@ COR_CIMA:
         je  COR_CIMA     ; vai buscar outra cor
 
     
-	mov vetor[bx-1], al
+	mov vetor[bx-1], al  
 	mov vetor[bx-2], al
 	POP bx
 	
 	
 	jmp CICLOLIMPATABUL
 
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~METER NOVA COR NO CIMO~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TOP 10 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
