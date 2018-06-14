@@ -1724,10 +1724,10 @@ EXPLODE_ESQ_F:
 
 EXPLODE_ESQ_B:
        
-       call atualizaTabuleiro
-		  mov di, 75
-		  call delay
-		  call atualizaTabuleiro
+       	call atualizaTabuleiro
+		mov di, 75
+		call delay
+		call atualizaTabuleiro
 		mov indiceVetor, 108
 	
 	    mov nlinha,5
@@ -1848,10 +1848,68 @@ VERIFICABONUS:
 		  cmp igualBonus,1
 		  je explodeNeg	
 	;~~~~~~~~~~~~~~~~~~~~~
-	
-	
-		
 
+	;~~~~~~~~ ESQUERDA TOPO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, -164
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, -164	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+	;~~~~~~~~ DIREITA TOPO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, -156
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, -156	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+	
+	;~~~~~~~~ ESQUERDA BAIXO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, 156
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, 156	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
+;~~~~~~~~ ESQUERDA TOPO
+
+		;~~~~ HAPPY FACE~~~~~
+		  mov caracter_bonus,40 ;mete o caracater '('
+		  mov offset_bonus, 164
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodePos
+		;~~~~ SAD FACE~~~~~
+		  mov caracter_bonus,41 ;mete o caracater ')'
+		  mov offset_bonus, 164	;
+		  call compara_bonus 
+		  cmp igualBonus,1
+		  je explodeNeg	
+	;~~~~~~~~~~~~~~~~~~~~~
 		
 		  jmp CICLOLIMPATABUL
 		  
