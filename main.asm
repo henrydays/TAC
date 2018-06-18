@@ -4,7 +4,7 @@
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~TRABALHO REALIZADO POR: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 	
 	;Henrique Manuel Figueiredo Dias nº 21260023
-	;Eduardo PUTA BARROS
+	;Eduardo Simões Barros           nº 21270614
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -876,9 +876,9 @@ PRINC PROC
 	MOV		AX,0B800H
 	MOV		ES,AX
 
-	call open_fich_nomes		;abre para memória o ficheiro dos nomes
-	call open_fich_pontos		;abre para memória o ficheiro dos pontos
-	call open_fich_tempos		;memória o ficheiro dos tempos
+	;call open_fich_nomes		;abre para memória o ficheiro dos nomes
+	;call open_fich_pontos		;abre para memória o ficheiro dos pontos
+	;call open_fich_tempos		;memória o ficheiro dos tempos
 
 	;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Ciclo principal - Inicio do Jogo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	
